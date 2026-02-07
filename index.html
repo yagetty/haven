@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Life OS</title>
 
 <style>
@@ -26,7 +26,7 @@ padding:16px;
 box-shadow:0 4px 14px rgba(0,0,0,0.06);
 }
 
-input, textarea{
+input, textarea, select{
 width:100%;
 padding:14px;
 border-radius:14px;
@@ -100,6 +100,9 @@ text-align:center;
 margin:20px;
 }
 
+.green{color:#16a34a}
+.red{color:#dc2626}
+
 .badge{
 font-size:12px;
 background:#111;
@@ -113,8 +116,7 @@ margin-left:6px;
 
 <body>
 
-<div class="header" id="title">Today</div>
-
+<div class="header">Life OS</div>
 <div id="app"></div>
 
 <button class="fab" onclick="openAdd()">＋</button>
@@ -124,7 +126,7 @@ margin-left:6px;
 <div class="tab" onclick="tab('focus')">Focus</div>
 <div class="tab" onclick="tab('wellness')">Wellness</div>
 <div class="tab" onclick="tab('money')">Money</div>
-<div class="tab" onclick="tab('planner')">Planner</div>
+<div class="tab" onclick="tab('portfolio')">Crypto</div>
 </div>
 
 <script>
@@ -132,9 +134,9 @@ margin-left:6px;
 let store=JSON.parse(localStorage.getItem("lifeos")||`{
 "tasks":[],
 "xp":0,
-"streak":0,
 "money":[],
-"journal":[]
+"journal":[],
+"portfolio":[]
 }`);
 
 function save(){localStorage.setItem("lifeos",JSON.stringify(store))}
@@ -153,7 +155,12 @@ store.xp+=n
 save()
 }
 
-function render(){
+async function prices(){
+let r=await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,solana&vs_currencies=usd")
+return await r.json()
+}
+
+async function render(){
 let html=""
 
 if(current=="today"){
@@ -211,12 +218,50 @@ ${store.money.map(m=>`<div>${m}</div>`).join("")}
 `
 }
 
-if(current=="planner"){
+if(current=="portfolio"){
+
+let p=await prices()
+
+let totalValue=0
+
+let rows=store.portfolio.map((coin,i)=>{
+let price=coin.type=="btc"?p.bitcoin.usd:p.solana.usd
+let value=coin.amount*price
+let profit=value-coin.cost
+totalValue+=value
+
+return `
+<div>
+${coin.type.toUpperCase()} — ${coin.amount}
+<br>
+Value: $${value.toFixed(2)}
+<br>
+<span class="${profit>=0?"green":"red"}">
+${profit>=0?"+":""}$${profit.toFixed(2)}
+</span>
+<button onclick="del(${i})">Remove</button>
+<hr>
+</div>
+`
+}).join("")
+
 html+=`
 <div class="card">
-Life Planner
-<textarea id="plan" placeholder="Write goals, plans..."></textarea>
+Portfolio Value
+<h2>$${totalValue.toFixed(2)}</h2>
 </div>
+
+<div class="card">
+<select id="coin">
+<option value="btc">Bitcoin</option>
+<option value="sol">Solana</option>
+</select>
+<input id="amount" placeholder="Amount owned">
+<input id="cost" placeholder="Total cost paid">
+<button onclick="addCoin()">Add</button>
+</div>
+
+<div class="card">${rows}</div>
 `
 }
 
@@ -267,6 +312,21 @@ alert("Saved")
 function addMoney(){
 store.money.push(document.getElementById("amt").value)
 xpAdd(2)
+save()
+render()
+}
+
+function addCoin(){
+let type=document.getElementById("coin").value
+let amount=parseFloat(document.getElementById("amount").value)
+let cost=parseFloat(document.getElementById("cost").value)
+store.portfolio.push({type,amount,cost})
+save()
+render()
+}
+
+function del(i){
+store.portfolio.splice(i,1)
 save()
 render()
 }
