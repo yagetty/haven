@@ -1,67 +1,185 @@
-// 1. Define the Data
-const data = {
-    task: {
-        title: "Finalize Design System",
-        desc: "Review typography scale and color tokens for the new proposal.",
-        time: "Due in 4 hours",
-        tag: "Priority"
-    },
-    stats: {
-        balance: 75
-    },
-    habits: [
-        { name: "Morning Meditation", done: true },
-        { name: "Drink 2L Water", done: false },
-        { name: "Read 30 mins", done: false }
+// --- 1. STATE MANAGEMENT (Simple Data Store) ---
+const store = {
+    tasks: [
+        { id: 1, text: "Review Design Tokens", done: false },
+        { id: 2, text: "Morning Walk", done: true }
+    ],
+    journal: [
+        { id: 1, date: "Oct 24", text: "Feeling focused today. The new color palette looks calm." }
     ]
 };
 
-// 2. Create HTML Strings
-const taskCard = `
-    <div class="card">
-        <span class="badge">${data.task.tag}</span>
-        <h3 style="font-size: 20px; margin-bottom: 8px;">${data.task.title}</h3>
-        <p style="color: #86868B; margin-bottom: 20px;">${data.task.desc}</p>
-        <div style="font-size: 13px; color: #A1A1A6;">🕒 ${data.task.time}</div>
-    </div>
-`;
+// Load data from phone memory if it exists
+if(localStorage.getItem('havenData')) {
+    const saved = JSON.parse(localStorage.getItem('havenData'));
+    store.tasks = saved.tasks || store.tasks;
+    store.journal = saved.journal || store.journal;
+}
 
-const statsCard = `
-    <div class="card" style="text-align: center;">
-        <div class="progress-circle">
-            <div class="progress-inner">${data.stats.balance}%</div>
+// --- 2. RENDER FUNCTIONS (The "Pages") ---
+
+// Page: HOME
+function renderHome() {
+    const app = document.getElementById('app');
+    document.getElementById('page-title').innerText = "Dashboard";
+    
+    // Calculate Progress
+    const total = store.tasks.length;
+    const done = store.tasks.filter(t => t.done).length;
+    const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+
+    app.innerHTML = `
+        <div class="card" style="background: linear-gradient(135deg, #1D1D1F, #3D405B); color: white;">
+            <h3>Focus Pulse</h3>
+            <div style="font-size: 48px; font-weight: 700; margin: 20px 0;">${percent}%</div>
+            <p style="opacity: 0.8;">Daily progress overview.</p>
         </div>
-        <h3 style="font-size: 16px; margin-bottom: 4px;">Day Balance</h3>
-        <p style="font-size: 13px; color: #86868B;">You're doing great.</p>
-    </div>
-`;
 
-const habitsCard = `
-    <div class="card">
-        <h3 style="font-size: 18px; margin-bottom: 16px;">Habits</h3>
-        ${data.habits.map(habit => `
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                <div style="
-                    width: 20px; height: 20px; 
-                    border: 1px solid #ccc; border-radius: 6px;
-                    ${habit.done ? 'background: #81B29A; border-color: #81B29A;' : ''}
-                "></div>
-                <span style="${habit.done ? 'text-decoration: line-through; color: #ccc;' : ''}">${habit.name}</span>
+        <div class="card">
+            <h3>Quick Tasks</h3>
+            ${store.tasks.slice(0, 3).map(task => `
+                <div class="habit-row">
+                    <span style="${task.done ? 'text-decoration: line-through; color: #ccc;' : ''}">${task.text}</span>
+                    <div class="checkbox ${task.done ? 'checked' : ''}" onclick="toggleTask(${task.id})">
+                        ${task.done ? '✓' : ''}
+                    </div>
+                </div>
+            `).join('')}
+            <div style="margin-top:15px; font-size:14px; color:#86868B; text-align:center;">
+                Go to Habits tab to manage full list
+            </div>
+        </div>
+    `;
+}
+
+// Page: HABITS
+function renderHabits() {
+    const app = document.getElementById('app');
+    document.getElementById('page-title').innerText = "Habits";
+
+    app.innerHTML = `
+        <div class="card">
+            <input type="text" id="newTaskInput" placeholder="Add a new habit or task..." onkeypress="handleEnter(event)">
+            <button class="btn" onclick="addTask()">Add Task</button>
+        </div>
+
+        ${store.tasks.map(task => `
+            <div class="card">
+                <div class="habit-row">
+                    <span style="font-size:16px;">${task.text}</span>
+                    <div class="checkbox ${task.done ? 'checked' : ''}" onclick="toggleTask(${task.id})">
+                        ${task.done ? '✓' : ''}
+                    </div>
+                </div>
             </div>
         `).join('')}
-    </div>
-`;
+        
+        ${store.tasks.length === 0 ? '<p style="text-align:center; color:#ccc;">No habits yet.</p>' : ''}
+    `;
+}
 
-// 3. Inject into the Page
-const app = document.getElementById('app');
-app.innerHTML = `
-    <div class="grid">
-        <div>
-            ${taskCard}
-            ${habitsCard}
+// Page: JOURNAL
+function renderJournal() {
+    const app = document.getElementById('app');
+    document.getElementById('page-title').innerText = "Journal";
+
+    app.innerHTML = `
+        <div class="card">
+            <textarea id="journalInput" rows="4" style="width:100%; border:1px solid #E5E5EA; border-radius:12px; padding:15px; font-family:inherit; resize:none;" placeholder="What's on your mind?"></textarea>
+            <button class="btn" onclick="addEntry()">Save Entry</button>
         </div>
-        <div>
-            ${statsCard}
+
+        ${store.journal.reverse().map(entry => `
+            <div class="card journal-entry">
+                <div class="date-badge">${entry.date}</div>
+                <p style="margin-top:8px; line-height:1.6;">${entry.text}</p>
+            </div>
+        `).join('')}
+    `;
+}
+
+// Page: SETTINGS
+function renderSettings() {
+    const app = document.getElementById('app');
+    document.getElementById('page-title').innerText = "Settings";
+    app.innerHTML = `
+        <div class="card">
+            <h3>Appearance</h3>
+            <p style="color:#86868B; margin-bottom:10px;">Theme: Warm Minimal (Default)</p>
         </div>
-    </div>
-`;
+        <div class="card">
+            <h3>Data</h3>
+            <button class="btn" style="background: #E07A5F;" onclick="clearData()">Reset All Data</button>
+        </div>
+    `;
+}
+
+// --- 3. ACTIONS (The Logic) ---
+
+function router(page) {
+    // Update Navbar UI
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    // This is a simple way to highlight the clicked icon based on order
+    const icons = document.querySelectorAll('.nav-item');
+    if(page === 'home') icons[0].classList.add('active');
+    if(page === 'habits') icons[1].classList.add('active');
+    if(page === 'journal') icons[2].classList.add('active');
+    if(page === 'settings') icons[3].classList.add('active');
+
+    // Render Page
+    if(page === 'home') renderHome();
+    if(page === 'habits') renderHabits();
+    if(page === 'journal') renderJournal();
+    if(page === 'settings') renderSettings();
+}
+
+function toggleTask(id) {
+    const task = store.tasks.find(t => t.id === id);
+    if(task) {
+        task.done = !task.done;
+        save();
+        router('habits'); // Re-render habits tab
+    }
+}
+
+function addTask() {
+    const input = document.getElementById('newTaskInput');
+    const text = input.value.trim();
+    if(text) {
+        store.tasks.push({ id: Date.now(), text: text, done: false });
+        input.value = '';
+        save();
+        router('habits');
+    }
+}
+
+function handleEnter(e) {
+    if(e.key === 'Enter') addTask();
+}
+
+function addEntry() {
+    const input = document.getElementById('journalInput');
+    const text = input.value.trim();
+    if(text) {
+        const date = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        store.journal.push({ id: Date.now(), date: date, text: text });
+        input.value = '';
+        save();
+        router('journal');
+    }
+}
+
+function clearData() {
+    if(confirm("Are you sure? This will delete all your habits and journal entries.")) {
+        localStorage.removeItem('havenData');
+        location.reload();
+    }
+}
+
+function save() {
+    localStorage.setItem('havenData', JSON.stringify(store));
+}
+
+// --- 4. INIT ---
+// Start on home page
+router('home');
