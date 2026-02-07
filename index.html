@@ -1,269 +1,2268 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Life OS | Personal</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Life OS — Notion-ish</title>
+<style>
+  :root{
+    /* Notion-ish light */
+    --bg:#ffffff;
+    --surface:#ffffff;
+    --surface-2:#f7f7f5;
+    --border:#e9e9e7;
+    --text:#1f2328;
+    --muted:#6b7280;
+    --muted-2:#8a8f98;
+    --shadow:0 1px 0 rgba(15,23,42,.04), 0 6px 20px rgba(15,23,42,.06);
+    --radius:12px;
+    --radius-sm:10px;
+    --accent:#111827; /* keep subtle */
+    --blue:#2563eb;
+    --green:#16a34a;
+    --red:#dc2626;
+    --amber:#d97706;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:var(--sans);
+    color:var(--text);
+    background:var(--bg);
+  }
+
+  /* Layout */
+  .app{
+    display:grid;
+    grid-template-columns: 280px 1fr;
+    height:100vh;
+  }
+  .sidebar{
+    border-right:1px solid var(--border);
+    background:var(--surface);
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    overflow:auto;
+  }
+  .brand{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 10px;
+    border-radius:12px;
+  }
+  .logo{
+    width:34px;height:34px;border-radius:10px;
+    border:1px solid var(--border);
+    background:linear-gradient(135deg,#fafafa,#f3f4f6);
+    display:grid;place-items:center;
+    font-family:var(--mono);
+    font-weight:700;
+  }
+  .brand h1{font-size:16px;margin:0}
+  .brand p{margin:0;font-size:12px;color:var(--muted)}
+  .search{
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:var(--surface-2);
+    display:flex;gap:8px;align-items:center;
+  }
+  .search input{
+    border:0;background:transparent;outline:none;width:100%;
+    font-size:14px;color:var(--text);
+  }
+  .nav{
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .nav button{
+    border:1px solid transparent;
+    background:transparent;
+    padding:10px 10px;
+    border-radius:12px;
+    text-align:left;
+    cursor:pointer;
+    display:flex;align-items:center;gap:10px;
+    font-size:14px;color:var(--text);
+  }
+  .nav button:hover{background:var(--surface-2)}
+  .nav button.active{
+    background:var(--surface-2);
+    border-color:var(--border);
+  }
+  .nav .ico{
+    width:22px;height:22px;border-radius:8px;
+    border:1px solid var(--border);
+    background:#fff;
+    display:grid;place-items:center;
+    font-size:12px;color:var(--muted);
+  }
+
+  .sidebar .spacer{flex:1}
+  .sidebar .mini{
+    font-size:12px;color:var(--muted);
+    padding:10px;border:1px dashed var(--border);
+    border-radius:12px;background:var(--surface-2);
+  }
+  .mini .row{display:flex;justify-content:space-between;gap:10px;margin-top:8px}
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;
+    border:1px solid var(--border);
+    padding:6px 10px;border-radius:999px;
+    background:#fff;font-size:12px;color:var(--muted);
+  }
+  .pill b{color:var(--text)}
+
+  /* Main */
+  .main{
+    overflow:auto;
+    padding:24px 22px 80px; /* room for mobile nav */
+    background:var(--bg);
+  }
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    margin-bottom:16px;
+  }
+  .titlewrap h2{margin:0;font-size:22px;letter-spacing:-0.02em}
+  .titlewrap p{margin:6px 0 0;color:var(--muted);font-size:13px}
+  .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .btn{
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--text);
+    padding:9px 12px;
+    border-radius:12px;
+    cursor:pointer;
+    font-size:13px;
+    display:inline-flex;align-items:center;gap:8px;
+    box-shadow:0 1px 0 rgba(0,0,0,.02);
+  }
+  .btn:hover{background:var(--surface-2)}
+  .btn.primary{
+    border-color:#dbeafe;
+    background:#eff6ff;
+    color:#1d4ed8;
+  }
+  .btn.danger{
+    border-color:#fee2e2;
+    background:#fff1f2;
+    color:#b91c1c;
+  }
+  .btn.small{padding:7px 10px;border-radius:10px;font-size:12px}
+  .kbd{
+    font-family:var(--mono);
+    border:1px solid var(--border);
+    background:#fff;
+    border-bottom-color:#d1d5db;
+    padding:2px 6px;border-radius:8px;
+    color:var(--muted);
+    font-size:12px;
+  }
+
+  /* Cards */
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap:14px;
+  }
+  .card{
+    grid-column: span 12;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:14px;
+  }
+  .card h3{margin:0 0 10px;font-size:14px}
+  .card .sub{margin:-6px 0 12px;color:var(--muted);font-size:12px}
+  .divider{height:1px;background:var(--border);margin:12px 0}
+
+  /* Form controls */
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:160px}
+  label{font-size:12px;color:var(--muted)}
+  input,select,textarea{
+    width:100%;
+    border:1px solid var(--border);
+    background:#fff;
+    border-radius:12px;
+    padding:10px 11px;
+    font-size:14px;
+    outline:none;
+  }
+  textarea{min-height:120px;resize:vertical}
+  input:focus,select:focus,textarea:focus{border-color:#c7d2fe; box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+  .hint{font-size:12px;color:var(--muted-2)}
+  .tag{
+    display:inline-flex;align-items:center;gap:6px;
+    border:1px solid var(--border);
+    background:var(--surface-2);
+    padding:5px 9px;border-radius:999px;
+    font-size:12px;color:var(--muted);
+  }
+
+  /* Lists */
+  .list{display:flex;flex-direction:column;gap:8px}
+  .item{
+    border:1px solid var(--border);
+    background:#fff;
+    border-radius:12px;
+    padding:10px 10px;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+  }
+  .item .left{display:flex;align-items:center;gap:10px;min-width:0}
+  .check{
+    width:18px;height:18px;border-radius:6px;border:1px solid var(--border);
+    display:grid;place-items:center;cursor:pointer;background:#fff;flex:0 0 auto;
+  }
+  .check.on{background:#ecfdf5;border-color:#bbf7d0;color:var(--green)}
+  .item .title{
+    font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .item .meta{font-size:12px;color:var(--muted)}
+  .item .right{display:flex;gap:8px;align-items:center;flex:0 0 auto}
+  .iconbtn{
+    border:1px solid var(--border);
+    background:#fff;
+    border-radius:10px;
+    padding:7px 9px;
+    cursor:pointer;
+    font-size:12px;color:var(--muted);
+  }
+  .iconbtn:hover{background:var(--surface-2)}
+  .empty{
+    border:1px dashed var(--border);
+    background:var(--surface-2);
+    color:var(--muted);
+    border-radius:12px;
+    padding:12px;
+    font-size:13px;
+  }
+
+  /* Calendar */
+  .cal-header{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    margin-bottom:10px;
+  }
+  .cal-title{font-weight:650}
+  .cal-grid{
+    display:grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap:8px;
+  }
+  .dow{
+    font-size:11px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.06em;
+    padding:6px 8px;
+  }
+  .day{
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:#fff;
+    min-height:92px;
+    padding:8px;
+    display:flex;flex-direction:column;gap:6px;
+    cursor:pointer;
+  }
+  .day:hover{background:var(--surface-2)}
+  .day .num{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+  .badge{
+    font-size:11px;border:1px solid var(--border);background:var(--surface-2);
+    padding:2px 6px;border-radius:999px;color:var(--muted);
+  }
+  .eventchip{
+    font-size:11px;
+    border:1px solid #dbeafe;
+    background:#eff6ff;
+    color:#1d4ed8;
+    padding:3px 6px;
+    border-radius:999px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .day.today{outline:3px solid rgba(37,99,235,.12); border-color:#c7d2fe}
+  .day.other{opacity:.55}
+
+  /* Assistant */
+  .chat{
+    display:flex;flex-direction:column;gap:10px;
+  }
+  .bubble{
+    border:1px solid var(--border);
+    background:#fff;
+    border-radius:14px;
+    padding:10px 12px;
+    max-width:900px;
+  }
+  .bubble.me{
+    background:var(--surface-2);
+  }
+  .bubble .who{
+    font-size:11px;color:var(--muted);
+    margin-bottom:6px;
+    display:flex;justify-content:space-between;gap:10px;
+  }
+  .bubble .txt{font-size:14px;white-space:pre-wrap}
+  .chatbox{
+    display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap
+  }
+  .chatbox textarea{min-height:44px;height:44px;max-height:140px}
+  .toggle{
+    display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);
+  }
+  .toggle input{width:16px;height:16px}
+
+  /* Finance */
+  .statrow{display:flex;gap:10px;flex-wrap:wrap}
+  .stat{
+    flex:1;min-width:180px;
+    border:1px solid var(--border);
+    background:#fff;
+    border-radius:14px;
+    padding:12px;
+  }
+  .stat .k{font-size:12px;color:var(--muted)}
+  .stat .v{font-size:20px;font-weight:700;margin-top:6px}
+  .stat .v.pos{color:var(--green)}
+  .stat .v.neg{color:var(--red)}
+  .spark{
+    height:42px;
+    border:1px dashed var(--border);
+    border-radius:12px;
+    margin-top:10px;
+    display:flex;align-items:flex-end;gap:3px;padding:6px;
+    background:var(--surface-2);
+  }
+  .bar{flex:1;background:#e5e7eb;border-radius:6px}
+
+  /* Meal planner */
+  .weekgrid{
+    display:grid;
+    grid-template-columns: 120px repeat(7, 1fr);
+    gap:8px;
+    overflow:auto;
+  }
+  .wg-head{font-size:11px;color:var(--muted);padding:6px 8px;text-transform:uppercase;letter-spacing:.06em}
+  .slotlabel{
+    border:1px solid var(--border);
+    background:var(--surface-2);
+    border-radius:12px;
+    padding:10px;
+    font-size:12px;color:var(--muted);
+  }
+  .mealcell{
+    border:1px solid var(--border);
+    background:#fff;
+    border-radius:12px;
+    padding:8px;
+    min-height:56px;
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .mealcell input{padding:8px;border-radius:10px}
+  .grocery{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between
+  }
+
+  /* Mobile UI */
+  .mobile-nav{
+    display:none;
+    position:fixed;left:0;right:0;bottom:0;
+    background:#fff;
+    border-top:1px solid var(--border);
+    padding:8px 10px;
+    z-index:50;
+  }
+  .mobile-nav .wrap{
+    display:grid;grid-template-columns: repeat(6, 1fr);
+    gap:6px;
+  }
+  .mbtn{
+    border:1px solid transparent;
+    background:transparent;
+    border-radius:14px;
+    padding:8px 6px;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    font-size:11px;color:var(--muted);
+    cursor:pointer;
+  }
+  .mbtn .dot{
+    width:22px;height:22px;border-radius:10px;
+    border:1px solid var(--border);display:grid;place-items:center;
+    font-size:12px;color:var(--muted); background:#fff;
+  }
+  .mbtn.active{background:var(--surface-2); border-color:var(--border); color:var(--text)}
+  .mbtn.active .dot{background:#fff}
+
+  @media (max-width: 980px){
+    .app{grid-template-columns: 1fr}
+    .sidebar{display:none}
+    .main{padding:18px 14px 92px}
+    .mobile-nav{display:block}
+  }
+</style>
 </head>
 <body>
-
-    <!-- APP SHELL -->
-    <div id="app">
-        
-        <!-- SIDEBAR -->
-        <nav class="sidebar">
-            <div class="sidebar-header">
-                <h1 class="brand-logo">Life OS</h1>
-                <div class="status-pill">
-                    <span class="status-dot"></span>
-                    <span id="system-status">Online</span>
-                </div>
-            </div>
-
-            <div class="nav-group">
-                <div class="nav-label">Main</div>
-                <button class="nav-item active" data-view="dashboard">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                    Command Center
-                </button>
-                <button class="nav-item" data-view="tasks">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
-                    Ikigai Tasks
-                </button>
-                <button class="nav-item" data-view="finance">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                    Resources
-                </button>
-                <button class="nav-item" data-view="calendar">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    Timeline
-                </button>
-            </div>
-
-            <div class="nav-group">
-                <div class="nav-label">Archive</div>
-                <button class="nav-item" data-view="notes">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                    Knowledge Base
-                </button>
-                <button class="nav-item" data-view="journal">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    Reflections
-                </button>
-            </div>
-
-            <div class="sidebar-footer">
-                <div class="user-mini">
-                    <div class="user-avatar">M</div>
-                    <div class="user-info">
-                        <span class="user-name">My Workspace</span>
-                        <span class="user-role">Administrator</span>
-                    </div>
-                </div>
-            </div>
-        </nav>
-
-        <!-- MAIN CONTENT AREA -->
-        <main class="content-area">
-            <!-- Dynamic Header -->
-            <header class="top-bar">
-                <div class="breadcrumbs" id="breadcrumbs">Command Center</div>
-                <div class="header-actions">
-                    <button class="icon-btn" title="Search" onclick="App.toggleSearch()">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    </button>
-                    <button class="primary-btn" id="global-action-btn" onclick="App.handleGlobalAction()">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        <span>New Entry</span>
-                    </button>
-                </div>
-            </header>
-
-            <!-- VIEWS -->
-            
-            <!-- 1. DASHBOARD VIEW -->
-            <section id="view-dashboard" class="view active">
-                <div class="welcome-banner">
-                    <h1 id="greeting">Good evening.</h1>
-                    <p>Your Ikigai alignment is strong today.</p>
-                </div>
-
-                <div class="grid-dashboard">
-                    <!-- Quick Stats -->
-                    <div class="card metric-card">
-                        <div class="metric-icon passion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div>
-                        <div>
-                            <div class="metric-value" id="metric-passion">0</div>
-                            <div class="metric-label">Passion Tasks</div>
-                        </div>
-                    </div>
-                    <div class="card metric-card">
-                        <div class="metric-icon mission"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg></div>
-                        <div>
-                            <div class="metric-value" id="metric-mission">0</div>
-                            <div class="metric-label">Mission Active</div>
-                        </div>
-                    </div>
-                    <div class="card metric-card">
-                        <div class="metric-icon vocation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
-                        <div>
-                            <div class="metric-value" id="metric-vocation">$0</div>
-                            <div class="metric-label">Potential Value</div>
-                        </div>
-                    </div>
-
-                    <!-- Focus Section -->
-                    <div class="card focus-card" style="grid-column: span 2;">
-                        <div class="card-header">
-                            <h3>Current Focus</h3>
-                            <span class="tag tag-blue">High Leverage</span>
-                        </div>
-                        <div id="dashboard-focus-list" class="task-compact-list">
-                            <!-- Injected via JS -->
-                        </div>
-                    </div>
-
-                    <!-- Resources Snapshot -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3>Resource Health</h3>
-                        </div>
-                        <div id="resource-snapshot" class="resource-bars">
-                            <!-- Injected via JS -->
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 2. TASKS VIEW -->
-            <section id="view-tasks" class="view">
-                <div class="toolbar">
-                    <div class="filters">
-                        <button class="filter-chip active" data-filter="all">All</button>
-                        <button class="filter-chip" data-filter="passion">Passion</button>
-                        <button class="filter-chip" data-filter="mission">Mission</button>
-                        <button class="filter-chip" data-filter="vocation">Vocation</button>
-                        <button class="filter-chip" data-filter="profession">Profession</button>
-                    </div>
-                </div>
-
-                <div class="task-board" id="task-board">
-                    <!-- Columns: Todo, In Progress, Done -->
-                    <div class="task-column">
-                        <div class="column-header">Backlog</div>
-                        <div class="task-list" id="col-backlog"></div>
-                    </div>
-                    <div class="task-column">
-                        <div class="column-header">In Progress</div>
-                        <div class="task-list" id="col-progress"></div>
-                    </div>
-                    <div class="task-column">
-                        <div class="column-header">Completed</div>
-                        <div class="task-list" id="col-done"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 3. FINANCE VIEW -->
-            <section id="view-finance" class="view">
-                <div class="finance-header">
-                    <h2>Resource Allocation</h2>
-                </div>
-                <div class="grid-dashboard">
-                    <div class="card col-span-2">
-                        <div class="card-header">
-                            <h3>Flow</h3>
-                            <button class="btn-small" onclick="Finance.addTransaction()">+ Log Entry</button>
-                        </div>
-                        <div class="finance-summary">
-                            <div class="summary-item">
-                                <span class="label">Income</span>
-                                <span class="val positive" id="fin-income">$0</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">Expenses</span>
-                                <span class="val negative" id="fin-expense">$0</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">Net</span>
-                                <span class="val" id="fin-net">$0</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">
-                            <h3>Ikigai ROI</h3>
-                        </div>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 10px;">Are your resources fueling your vocation?</p>
-                        <div id="ikigai-roi-list" class="simple-list"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 4. CALENDAR VIEW -->
-            <section id="view-calendar" class="view">
-                <div class="calendar-wrapper">
-                    <div class="calendar-header">
-                        <button class="icon-btn" id="cal-prev"><</button>
-                        <h3 id="cal-month-year">Month Year</h3>
-                        <button class="icon-btn" id="cal-next">></button>
-                    </div>
-                    <div class="calendar-grid" id="calendar-grid">
-                        <!-- JS Generated -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- 5. NOTES VIEW -->
-            <section id="view-notes" class="view">
-                <div class="notes-layout">
-                    <div class="notes-sidebar">
-                        <button class="note-item active">Quick Thoughts</button>
-                        <!-- Dynamic list here -->
-                    </div>
-                    <div class="notes-editor">
-                        <textarea id="main-editor" placeholder="Start typing..."></textarea>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- 6. JOURNAL VIEW -->
-            <section id="view-journal" class="view">
-                <div class="journal-container">
-                    <div class="prompt-box">
-                        <h3>Daily Prompt</h3>
-                        <p id="journal-prompt">What did you do today that brought you joy?</p>
-                    </div>
-                    <textarea class="journal-input" id="journal-entry" placeholder="Write your reflection..."></textarea>
-                    <button class="primary-btn" onclick="Journal.save()">Save Reflection</button>
-                    <div class="journal-history" id="journal-history"></div>
-                </div>
-            </section>
-
-        </main>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar" aria-label="Sidebar">
+    <div class="brand">
+      <div class="logo">OS</div>
+      <div>
+        <h1>Life OS</h1>
+        <p>Notion-ish personal hub</p>
+      </div>
     </div>
 
-    <!-- MODAL CONTAINER -->
-    <div id="modal-container" class="modal-overlay hidden">
-        <div class="modal">
-            <div class="modal-header">
-                <h3 id="modal-title">New Entry</h3>
-                <button class="icon-btn close-modal" onclick="App.closeModal()">✕</button>
+    <div class="search" title="Search (filters lists shown on screen)">
+      <span style="color:var(--muted);font-size:12px">⌕</span>
+      <input id="globalSearch" placeholder="Search tasks, journal, finance..." />
+    </div>
+
+    <nav class="nav" id="sideNav">
+      <button data-view="home" class="active"><span class="ico">🏠</span>Home</button>
+      <button data-view="calendar"><span class="ico">🗓️</span>Calendar</button>
+      <button data-view="journal"><span class="ico">📓</span>Journal</button>
+      <button data-view="assistant"><span class="ico">✨</span>AI Assistant</button>
+      <button data-view="finance"><span class="ico">💸</span>Finance</button>
+      <button data-view="meals"><span class="ico">🍽️</span>Meal Planner</button>
+    </nav>
+
+    <div class="spacer"></div>
+
+    <div class="mini">
+      <div style="font-weight:650;color:var(--text)">Quick stats</div>
+      <div class="row">
+        <span class="pill">Tasks <b id="statTasks">0</b></span>
+        <span class="pill">Habits <b id="statHabits">0</b></span>
+      </div>
+      <div class="row">
+        <span class="pill">This month <b id="statMonthNet">£0</b></span>
+        <span class="pill">Journal <b id="statJournal">0</b></span>
+      </div>
+      <div class="divider"></div>
+      <div class="row">
+        <button class="btn small" id="btnExport">Export</button>
+        <label class="btn small" style="cursor:pointer">
+          Import <input id="btnImport" type="file" accept="application/json" style="display:none">
+        </label>
+      </div>
+      <div class="hint" style="margin-top:8px">Everything saves locally in your browser.</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="topbar">
+      <div class="titlewrap">
+        <h2 id="viewTitle">Home</h2>
+        <p id="viewSubtitle">Your dashboard.</p>
+      </div>
+      <div class="actions" id="topActions">
+        <button class="btn" id="btnToday">Today <span class="kbd">T</span></button>
+        <button class="btn primary" id="btnQuickAdd">Quick add <span class="kbd">A</span></button>
+        <button class="btn danger" id="btnReset">Reset</button>
+      </div>
+    </div>
+
+    <!-- Views -->
+    <section id="view-home" class="view">
+      <div class="grid">
+        <!-- Tasks -->
+        <div class="card" style="grid-column: span 6;">
+          <h3>Tasks</h3>
+          <div class="sub">Lightweight to-do list.</div>
+          <div class="row">
+            <div class="field">
+              <label>New task</label>
+              <input id="taskInput" placeholder="e.g. Submit invoice, Call mum..." />
             </div>
-            <div class="modal-body" id="modal-body">
-                <!-- Dynamic Content -->
+            <div class="field" style="flex:0 0 160px;min-width:160px">
+              <label>Due</label>
+              <input id="taskDue" type="date" />
             </div>
-            <div class="modal-footer">
-                <button class="btn-secondary close-modal" onclick="App.closeModal()">Cancel</button>
-                <button class="primary-btn" id="modal-save-btn">Save</button>
-            </div>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="addTask">Add task</button>
+            <button class="btn" id="clearDoneTasks">Clear completed</button>
+          </div>
+          <div class="divider"></div>
+          <div id="taskList" class="list"></div>
         </div>
+
+        <!-- Habits -->
+        <div class="card" style="grid-column: span 6;">
+          <h3>Habits</h3>
+          <div class="sub">Simple daily check-ins (per day).</div>
+          <div class="row">
+            <div class="field">
+              <label>New habit</label>
+              <input id="habitInput" placeholder="e.g. Workout, Meditate, Read 10 pages..." />
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="addHabit">Add habit</button>
+            <button class="btn" id="resetHabitsToday">Reset today</button>
+          </div>
+          <div class="divider"></div>
+          <div id="habitList" class="list"></div>
+        </div>
+
+        <!-- Quick capture -->
+        <div class="card" style="grid-column: span 12;">
+          <h3>Quick capture</h3>
+          <div class="sub">Dump thoughts fast; sort later.</div>
+          <div class="row">
+            <div class="field">
+              <label>Inbox note</label>
+              <textarea id="inboxNote" placeholder="Type anything..."></textarea>
+              <div class="row">
+                <button class="btn primary" id="saveInbox">Save</button>
+                <button class="btn" id="clearInbox">Clear</button>
+              </div>
+              <div class="hint">Tip: Press <span class="kbd">A</span> for Quick add.</div>
+            </div>
+            <div class="field">
+              <label>Saved inbox</label>
+              <div id="inboxList" class="list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-calendar" class="view" style="display:none">
+      <div class="grid">
+        <div class="card" style="grid-column: span 12;">
+          <h3>Calendar</h3>
+          <div class="sub">Month view with quick events.</div>
+          <div class="cal-header">
+            <div class="row" style="align-items:center">
+              <button class="btn small" id="calPrev">←</button>
+              <div class="cal-title" id="calTitle"></div>
+              <button class="btn small" id="calNext">→</button>
+              <button class="btn small" id="calNow">Today</button>
+            </div>
+            <button class="btn primary" id="calAdd">Add event</button>
+          </div>
+          <div class="cal-grid" id="calDOW"></div>
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="divider"></div>
+          <div id="calDayPanel" class="empty">Click a day to see/add events.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-journal" class="view" style="display:none">
+      <div class="grid">
+        <div class="card" style="grid-column: span 7;">
+          <h3>Journal</h3>
+          <div class="sub">Daily entry with mood + tags.</div>
+          <div class="row">
+            <div class="field" style="flex:0 0 190px;min-width:190px">
+              <label>Date</label>
+              <input id="jrDate" type="date" />
+            </div>
+            <div class="field" style="flex:0 0 190px;min-width:190px">
+              <label>Mood</label>
+              <select id="jrMood">
+                <option value="">—</option>
+                <option>😄 Great</option>
+                <option>🙂 Good</option>
+                <option>😐 Meh</option>
+                <option>😟 Low</option>
+                <option>😵 Overwhelmed</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Tags (comma-separated)</label>
+              <input id="jrTags" placeholder="work, health, relationships..." />
+            </div>
+          </div>
+          <div class="field">
+            <label>Entry</label>
+            <textarea id="jrText" placeholder="What happened today? What did you learn?"></textarea>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="jrSave">Save entry</button>
+            <button class="btn" id="jrClear">Clear</button>
+          </div>
+        </div>
+
+        <div class="card" style="grid-column: span 5;">
+          <h3>Entries</h3>
+          <div class="sub">Newest first.</div>
+          <div id="jrList" class="list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-assistant" class="view" style="display:none">
+      <div class="grid">
+        <div class="card" style="grid-column: span 7;">
+          <h3>AI Assistant panel</h3>
+          <div class="sub">Local “coach” by default. Optional: hook to your own API endpoint.</div>
+
+          <div class="row" style="align-items:center;justify-content:space-between">
+            <div class="toggle">
+              <input type="checkbox" id="aiUseExternal" />
+              <span>Use external API</span>
+            </div>
+            <button class="btn small" id="aiClear">Clear chat</button>
+          </div>
+
+          <div id="aiExternalConfig" style="display:none;margin-top:10px">
+            <div class="row">
+              <div class="field">
+                <label>Endpoint URL</label>
+                <input id="aiEndpoint" placeholder="https://your-server.com/chat" />
+              </div>
+              <div class="field">
+                <label>Bearer token (optional)</label>
+                <input id="aiToken" placeholder="paste token..." />
+              </div>
+            </div>
+            <div class="hint">
+              Expected response JSON: <span class="kbd">{ "reply": "..." }</span>
+              (You can adapt the fetch in code.)
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div id="chatLog" class="chat"></div>
+
+          <div class="divider"></div>
+
+          <div class="chatbox">
+            <div class="field" style="flex:1;min-width:240px">
+              <label>Your message</label>
+              <textarea id="aiInput" placeholder="Ask for a weekly plan, meal ideas, finance tips, journal prompts..."></textarea>
+            </div>
+            <button class="btn primary" id="aiSend">Send</button>
+          </div>
+
+          <div class="hint" style="margin-top:10px">
+            Try: “Make me a 7-day plan for gym + meals”, “Summarise my last 3 journal entries (themes)”, “Help me budget this month”.
+          </div>
+        </div>
+
+        <div class="card" style="grid-column: span 5;">
+          <h3>Quick tools</h3>
+          <div class="sub">Handy prompts that use your Life OS data.</div>
+          <div class="list">
+            <div class="item">
+              <div class="left"><div class="title">Plan my week</div></div>
+              <div class="right"><button class="iconbtn" data-aiprompt="Create a practical plan for this week using my tasks, habits, calendar events, finance goals, and meal plan. Keep it short and actionable.">Run</button></div>
+            </div>
+            <div class="item">
+              <div class="left"><div class="title">Journal prompt</div></div>
+              <div class="right"><button class="iconbtn" data-aiprompt="Give me 5 journal prompts for today, based on my recent entries and goals.">Run</button></div>
+            </div>
+            <div class="item">
+              <div class="left"><div class="title">Budget nudge</div></div>
+              <div class="right"><button class="iconbtn" data-aiprompt="Based on my finance transactions this month, suggest 3 ways to reduce spending or increase savings.">Run</button></div>
+            </div>
+            <div class="item">
+              <div class="left"><div class="title">Meal helper</div></div>
+              <div class="right"><button class="iconbtn" data-aiprompt="Using my meal plan, generate a grocery list and give 3 quick meal substitutions if I'm short on time.">Run</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-finance" class="view" style="display:none">
+      <div class="grid">
+        <div class="card" style="grid-column: span 12;">
+          <h3>Finance tracker</h3>
+          <div class="sub">Track income/expenses. Monthly net auto-calculated.</div>
+
+          <div class="statrow" style="margin-bottom:12px">
+            <div class="stat">
+              <div class="k">This month income</div>
+              <div class="v pos" id="finIncome">£0</div>
+              <div class="spark" id="sparkIncome"></div>
+            </div>
+            <div class="stat">
+              <div class="k">This month expenses</div>
+              <div class="v neg" id="finExpense">£0</div>
+              <div class="spark" id="sparkExpense"></div>
+            </div>
+            <div class="stat">
+              <div class="k">This month net</div>
+              <div class="v" id="finNet">£0</div>
+              <div class="hint" id="finNetHint" style="margin-top:6px"></div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field" style="flex:0 0 160px;min-width:160px">
+              <label>Date</label>
+              <input id="finDate" type="date" />
+            </div>
+            <div class="field">
+              <label>Description</label>
+              <input id="finDesc" placeholder="e.g. Groceries, Salary, Rent..." />
+            </div>
+            <div class="field" style="flex:0 0 160px;min-width:160px">
+              <label>Amount</label>
+              <input id="finAmt" type="number" step="0.01" placeholder="e.g. -23.50 or 1200" />
+            </div>
+            <div class="field" style="flex:0 0 170px;min-width:170px">
+              <label>Category</label>
+              <select id="finCat">
+                <option>Income</option>
+                <option>Housing</option>
+                <option>Food</option>
+                <option>Transport</option>
+                <option>Health</option>
+                <option>Subscriptions</option>
+                <option>Fun</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="finAdd">Add transaction</button>
+            <button class="btn" id="finClearMonth">Clear this month</button>
+          </div>
+
+          <div class="divider"></div>
+
+          <div id="finList" class="list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-meals" class="view" style="display:none">
+      <div class="grid">
+        <div class="card" style="grid-column: span 12;">
+          <h3>Meal planner / help</h3>
+          <div class="sub">Plan breakfasts, lunches, dinners. Auto grocery list from ingredients.</div>
+
+          <div class="row" style="align-items:center;justify-content:space-between">
+            <div class="row" style="align-items:center">
+              <button class="btn small" id="mealPrev">←</button>
+              <div class="tag" id="mealWeekLabel">Week</div>
+              <button class="btn small" id="mealNext">→</button>
+              <button class="btn small" id="mealThisWeek">This week</button>
+            </div>
+            <div class="row">
+              <button class="btn" id="mealAutoIdeas">Suggest ideas</button>
+              <button class="btn primary" id="mealBuildGrocery">Build grocery list</button>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="weekgrid" id="mealGrid"></div>
+
+          <div class="divider"></div>
+
+          <div class="row">
+            <div class="card" style="grid-column: span 12; padding:14px; flex:1; min-width:280px; box-shadow:none; border-radius:14px; border:1px solid var(--border); background:#fff;">
+              <h3 style="margin:0 0 8px">Recipe / ingredient helper</h3>
+              <div class="sub" style="margin:0 0 12px">Store ingredients per meal so grocery list can be generated.</div>
+              <div class="row">
+                <div class="field" style="flex:0 0 180px;min-width:180px">
+                  <label>Pick day</label>
+                  <select id="mealPickDay"></select>
+                </div>
+                <div class="field" style="flex:0 0 180px;min-width:180px">
+                  <label>Pick slot</label>
+                  <select id="mealPickSlot">
+                    <option>Breakfast</option>
+                    <option>Lunch</option>
+                    <option>Dinner</option>
+                    <option>Snack</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Ingredients (comma-separated)</label>
+                  <input id="mealIngredients" placeholder="eggs, oats, chicken, rice..." />
+                </div>
+              </div>
+              <div class="row">
+                <button class="btn primary" id="mealSaveIngredients">Save ingredients</button>
+                <button class="btn" id="mealClearIngredients">Clear ingredients</button>
+              </div>
+            </div>
+
+            <div class="card" style="grid-column: span 12; padding:14px; flex:1; min-width:280px; box-shadow:none; border-radius:14px; border:1px solid var(--border); background:#fff;">
+              <div class="grocery">
+                <div>
+                  <h3 style="margin:0 0 6px">Grocery list</h3>
+                  <div class="sub" style="margin:0">Generated from saved ingredients.</div>
+                </div>
+                <div class="row">
+                  <button class="btn small" id="mealCopyGrocery">Copy</button>
+                  <button class="btn small" id="mealClearGrocery">Clear</button>
+                </div>
+              </div>
+              <div class="divider"></div>
+              <div id="groceryList" class="list"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Add Modal -->
+    <div id="modal" style="display:none; position:fixed; inset:0; background:rgba(17,24,39,.35); z-index:60; padding:20px;">
+      <div style="max-width:760px; margin:60px auto; background:#fff; border-radius:18px; border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden;">
+        <div style="padding:14px 14px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); background:var(--surface-2)">
+          <div style="font-weight:650">Quick add</div>
+          <button class="btn small" id="modalClose">Close</button>
+        </div>
+        <div style="padding:14px;">
+          <div class="row">
+            <div class="field">
+              <label>Type</label>
+              <select id="qaType">
+                <option value="task">Task</option>
+                <option value="event">Calendar event</option>
+                <option value="journal">Journal entry</option>
+                <option value="finance">Finance transaction</option>
+                <option value="meal">Meal (week)</option>
+              </select>
+            </div>
+            <div class="field" style="flex:0 0 190px;min-width:190px">
+              <label>Date</label>
+              <input id="qaDate" type="date" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Title / description</label>
+            <input id="qaTitle" placeholder="What is it?" />
+          </div>
+
+          <div id="qaExtra"></div>
+
+          <div class="row">
+            <button class="btn primary" id="qaAdd">Add</button>
+            <button class="btn" id="qaClear">Clear</button>
+          </div>
+          <div class="hint">Shortcuts: <span class="kbd">A</span> quick add • <span class="kbd">T</span> today • <span class="kbd">/</span> focus search</div>
+        </div>
+      </div>
     </div>
 
-    <script type="module" src="app.js"></script>
+  </main>
+</div>
+
+<!-- Mobile nav -->
+<div class="mobile-nav" role="navigation" aria-label="Mobile navigation">
+  <div class="wrap" id="mobileNav">
+    <button class="mbtn active" data-view="home"><div class="dot">🏠</div>Home</button>
+    <button class="mbtn" data-view="calendar"><div class="dot">🗓️</div>Cal</button>
+    <button class="mbtn" data-view="journal"><div class="dot">📓</div>Journal</button>
+    <button class="mbtn" data-view="assistant"><div class="dot">✨</div>AI</button>
+    <button class="mbtn" data-view="finance"><div class="dot">💸</div>Money</button>
+    <button class="mbtn" data-view="meals"><div class="dot">🍽️</div>Meals</button>
+  </div>
+</div>
+
+<script>
+/* =========================
+   Life OS — single file
+   Data stored in localStorage
+========================= */
+
+const STORE_KEY = "lifeos_v2_notionish";
+const todayISO = () => new Date().toISOString().slice(0,10);
+const ym = (d) => d.toISOString().slice(0,7);
+const fmtMoney = (n) => {
+  const v = Number(n || 0);
+  const sign = v < 0 ? "-" : "";
+  const abs = Math.abs(v);
+  return `${sign}£${abs.toFixed(2)}`;
+};
+const clamp = (v,min,max) => Math.max(min, Math.min(max, v));
+
+function loadStore(){
+  const raw = localStorage.getItem(STORE_KEY);
+  if(raw){
+    try { return JSON.parse(raw); } catch(e){}
+  }
+  return {
+    tasks: [], // {id,title,due,done,createdAt}
+    habits: [], // {id,title,history:{[date]:true}}
+    inbox: [], // {id,text,createdAt}
+    calendarEvents: [], // {id,date,title,time,notes}
+    journal: [], // {id,date,mood,tags,text,createdAt}
+    chat: [], // {id,role,ts,text}
+    finance: [], // {id,date,desc,amount,cat,createdAt}
+    meals: { anchorMonday: mondayOf(new Date()).toISOString().slice(0,10), plan: {}, ingredients: {}, grocery: [] }, 
+    settings: {
+      aiUseExternal:false,
+      aiEndpoint:"",
+      aiToken:""
+    }
+  };
+}
+function saveStore(){
+  localStorage.setItem(STORE_KEY, JSON.stringify(store));
+  refreshStats();
+}
+function uid(prefix="id"){
+  return prefix + "_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+}
+let store = loadStore();
+
+/* =========================
+   Navigation
+========================= */
+const views = ["home","calendar","journal","assistant","finance","meals"];
+const viewTitleMap = {
+  home:["Home","Your dashboard."],
+  calendar:["Calendar","Month view + events."],
+  journal:["Journal","Daily entries, moods, and tags."],
+  assistant:["AI Assistant","Chat + quick tools."],
+  finance:["Finance","Track income and expenses."],
+  meals:["Meal Planner","Weekly plan + grocery helper."]
+};
+let currentView = "home";
+
+function setActiveNav(view){
+  currentView = view;
+  for(const v of views){
+    const el = document.getElementById("view-"+v);
+    if(el) el.style.display = (v===view) ? "" : "none";
+  }
+  document.getElementById("viewTitle").textContent = viewTitleMap[view][0];
+  document.getElementById("viewSubtitle").textContent = viewTitleMap[view][1];
+
+  // Side nav
+  document.querySelectorAll("#sideNav button").forEach(b=>{
+    b.classList.toggle("active", b.dataset.view===view);
+  });
+  // Mobile nav
+  document.querySelectorAll("#mobileNav .mbtn").forEach(b=>{
+    b.classList.toggle("active", b.dataset.view===view);
+  });
+
+  // Render view-specific
+  if(view==="home"){ renderHome(); }
+  if(view==="calendar"){ renderCalendar(); }
+  if(view==="journal"){ renderJournal(); }
+  if(view==="assistant"){ renderChat(); syncAISettingsUI(); }
+  if(view==="finance"){ renderFinance(); }
+  if(view==="meals"){ renderMeals(); }
+}
+
+document.querySelectorAll("#sideNav button, #mobileNav .mbtn").forEach(btn=>{
+  btn.addEventListener("click", ()=> setActiveNav(btn.dataset.view));
+});
+
+/* =========================
+   Global search filter
+========================= */
+let globalFilter = "";
+const globalSearchEl = document.getElementById("globalSearch");
+if(globalSearchEl){
+  globalSearchEl.addEventListener("input", (e)=>{
+    globalFilter = (e.target.value || "").trim().toLowerCase();
+    // rerender current view to apply filtering
+    setActiveNav(currentView);
+  });
+}
+function matchesFilter(...texts){
+  if(!globalFilter) return true;
+  return texts.some(t => (t||"").toLowerCase().includes(globalFilter));
+}
+
+/* =========================
+   Home: Tasks, Habits, Inbox
+========================= */
+function renderHome(){
+  renderTasks();
+  renderHabits();
+  renderInbox();
+}
+
+function renderTasks(){
+  const el = document.getElementById("taskList");
+  const tasks = [...store.tasks].sort((a,b)=>{
+    // undone first, earliest due first
+    if(a.done!==b.done) return a.done ? 1 : -1;
+    return (a.due||"9999-12-31").localeCompare(b.due||"9999-12-31");
+  }).filter(t => matchesFilter(t.title, t.due));
+
+  el.innerHTML = "";
+  if(tasks.length===0){
+    el.innerHTML = `<div class="empty">No tasks yet. Add one above.</div>`;
+    return;
+  }
+  for(const t of tasks){
+    const wrap = document.createElement("div");
+    wrap.className = "item";
+    const dueTxt = t.due ? `Due ${t.due}` : "No due date";
+    wrap.innerHTML = `
+      <div class="left">
+        <div class="check ${t.done?"on":""}" title="Toggle complete">${t.done?"✓":""}</div>
+        <div style="min-width:0">
+          <div class="title" style="${t.done?"text-decoration:line-through;color:var(--muted)":""}">${escapeHtml(t.title)}</div>
+          <div class="meta">${escapeHtml(dueTxt)}</div>
+        </div>
+      </div>
+      <div class="right">
+        <button class="iconbtn" title="Send to assistant">✨</button>
+        <button class="iconbtn" title="Delete">🗑️</button>
+      </div>
+    `;
+    const [check, btnAI, btnDel] = wrap.querySelectorAll(".check, .right .iconbtn");
+    check.addEventListener("click", ()=>{
+      t.done = !t.done;
+      saveStore(); renderTasks();
+    });
+    btnAI.addEventListener("click", ()=>{
+      setActiveNav("assistant");
+      aiSendText(`Help me complete this task: "${t.title}". Give me a 3-step plan and a quick template if needed.`);
+    });
+    btnDel.addEventListener("click", ()=>{
+      store.tasks = store.tasks.filter(x=>x.id!==t.id);
+      saveStore(); renderTasks();
+    });
+    el.appendChild(wrap);
+  }
+}
+
+document.getElementById("addTask").addEventListener("click", ()=>{
+  const title = document.getElementById("taskInput").value.trim();
+  const due = document.getElementById("taskDue").value;
+  if(!title) return;
+  store.tasks.unshift({id:uid("task"), title, due: due || "", done:false, createdAt: Date.now()});
+  document.getElementById("taskInput").value = "";
+  document.getElementById("taskDue").value = "";
+  saveStore(); renderTasks();
+});
+document.getElementById("clearDoneTasks").addEventListener("click", ()=>{
+  store.tasks = store.tasks.filter(t=>!t.done);
+  saveStore(); renderTasks();
+});
+
+function renderHabits(){
+  const el = document.getElementById("habitList");
+  const d = todayISO();
+  const habits = store.habits
+    .filter(h=>matchesFilter(h.title))
+    .sort((a,b)=>a.title.localeCompare(b.title));
+
+  el.innerHTML = "";
+  if(habits.length===0){
+    el.innerHTML = `<div class="empty">No habits yet. Add one above.</div>`;
+    return;
+  }
+  for(const h of habits){
+    const done = !!(h.history && h.history[d]);
+    const wrap = document.createElement("div");
+    wrap.className = "item";
+    wrap.innerHTML = `
+      <div class="left">
+        <div class="check ${done?"on":""}" title="Toggle today's check">${done?"✓":""}</div>
+        <div style="min-width:0">
+          <div class="title">${escapeHtml(h.title)}</div>
+          <div class="meta">Today: ${done ? "done" : "not yet"}</div>
+        </div>
+      </div>
+      <div class="right">
+        <button class="iconbtn" title="Streak">🔥</button>
+        <button class="iconbtn" title="Delete">🗑️</button>
+      </div>
+    `;
+    const [check, btnStreak, btnDel] = wrap.querySelectorAll(".check, .right .iconbtn");
+    check.addEventListener("click", ()=>{
+      h.history = h.history || {};
+      h.history[d] = !done;
+      saveStore(); renderHabits(); refreshStats();
+    });
+    btnStreak.addEventListener("click", ()=>{
+      alert(`${h.title}\n\nCurrent streak: ${calcStreak(h)} days`);
+    });
+    btnDel.addEventListener("click", ()=>{
+      store.habits = store.habits.filter(x=>x.id!==h.id);
+      saveStore(); renderHabits(); refreshStats();
+    });
+    el.appendChild(wrap);
+  }
+}
+document.getElementById("addHabit").addEventListener("click", ()=>{
+  const title = document.getElementById("habitInput").value.trim();
+  if(!title) return;
+  store.habits.push({id:uid("habit"), title, history:{}});
+  document.getElementById("habitInput").value = "";
+  saveStore(); renderHabits();
+});
+document.getElementById("resetHabitsToday").addEventListener("click", ()=>{
+  const d = todayISO();
+  for(const h of store.habits){
+    if(h.history) delete h.history[d];
+  }
+  saveStore(); renderHabits();
+});
+function calcStreak(h){
+  const hist = h.history || {};
+  let streak = 0;
+  let dt = new Date();
+  for(let i=0;i<3650;i++){
+    const key = dt.toISOString().slice(0,10);
+    if(hist[key]){ streak++; dt.setDate(dt.getDate()-1); }
+    else break;
+  }
+  return streak;
+}
+
+function renderInbox(){
+  const el = document.getElementById("inboxList");
+  const items = store.inbox
+    .filter(n=>matchesFilter(n.text))
+    .sort((a,b)=>b.createdAt-a.createdAt);
+
+  el.innerHTML = "";
+  if(items.length===0){
+    el.innerHTML = `<div class="empty">Nothing saved yet. Use Quick capture.</div>`;
+    return;
+  }
+  for(const n of items){
+    const wrap = document.createElement("div");
+    wrap.className = "item";
+    const dt = new Date(n.createdAt);
+    wrap.innerHTML = `
+      <div class="left">
+        <div style="min-width:0">
+          <div class="title">${escapeHtml(n.text)}</div>
+          <div class="meta">${dt.toLocaleString()}</div>
+        </div>
+      </div>
+      <div class="right">
+        <button class="iconbtn" title="Send to journal">📓</button>
+        <button class="iconbtn" title="Delete">🗑️</button>
+      </div>
+    `;
+    const [btnJ, btnDel] = wrap.querySelectorAll(".right .iconbtn");
+    btnJ.addEventListener("click", ()=>{
+      setActiveNav("journal");
+      document.getElementById("jrDate").value = todayISO();
+      document.getElementById("jrText").value = (document.getElementById("jrText").value || "") + (document.getElementById("jrText").value ? "\n\n" : "") + n.text;
+    });
+    btnDel.addEventListener("click", ()=>{
+      store.inbox = store.inbox.filter(x=>x.id!==n.id);
+      saveStore(); renderInbox();
+    });
+    el.appendChild(wrap);
+  }
+}
+document.getElementById("saveInbox").addEventListener("click", ()=>{
+  const text = document.getElementById("inboxNote").value.trim();
+  if(!text) return;
+  store.inbox.unshift({id:uid("inbox"), text, createdAt: Date.now()});
+  document.getElementById("inboxNote").value = "";
+  saveStore(); renderInbox();
+});
+document.getElementById("clearInbox").addEventListener("click", ()=>{
+  document.getElementById("inboxNote").value = "";
+});
+
+/* =========================
+   Calendar
+========================= */
+const DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+let calCursor = new Date(); calCursor.setDate(1);
+
+function mondayOf(date){
+  const d = new Date(date);
+  const day = (d.getDay()+6)%7; // Monday=0
+  d.setDate(d.getDate()-day);
+  d.setHours(0,0,0,0);
+  return d;
+}
+function renderCalendar(){
+  // DOW header
+  const dow = document.getElementById("calDOW");
+  dow.innerHTML = "";
+  for(const name of DOW){
+    const d = document.createElement("div");
+    d.className="dow";
+    d.textContent=name;
+    dow.appendChild(d);
+  }
+
+  const title = document.getElementById("calTitle");
+  const monthName = calCursor.toLocaleString(undefined,{month:"long",year:"numeric"});
+  title.textContent = monthName;
+
+  const grid = document.getElementById("calGrid");
+  grid.innerHTML = "";
+
+  // Determine first cell = Monday before/at first day of month
+  const first = new Date(calCursor);
+  const start = mondayOf(first);
+
+  const today = todayISO();
+  const days = 42; // 6 weeks
+  for(let i=0;i<days;i++){
+    const d = new Date(start);
+    d.setDate(start.getDate()+i);
+    const iso = d.toISOString().slice(0,10);
+
+    const inMonth = d.getMonth()===calCursor.getMonth();
+    const dayEvents = store.calendarEvents.filter(e=>e.date===iso);
+
+    const cell = document.createElement("div");
+    cell.className = "day" + (iso===today ? " today":"") + (!inMonth ? " other":"");
+    cell.innerHTML = `
+      <div class="num">
+        <span>${d.getDate()}</span>
+        ${dayEvents.length ? `<span class="badge">${dayEvents.length}</span>` : ``}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;min-width:0"></div>
+    `;
+    const chips = cell.querySelector("div:last-child");
+    for(const ev of dayEvents.slice(0,2)){
+      const chip = document.createElement("div");
+      chip.className="eventchip";
+      chip.textContent = (ev.time ? ev.time+" " : "") + ev.title;
+      chips.appendChild(chip);
+    }
+    if(dayEvents.length>2){
+      const more = document.createElement("div");
+      more.className="eventchip";
+      more.style.borderColor="var(--border)";
+      more.style.background="var(--surface-2)";
+      more.style.color="var(--muted)";
+      more.textContent = `+${dayEvents.length-2} more`;
+      chips.appendChild(more);
+    }
+
+    cell.addEventListener("click", ()=> openDayPanel(iso));
+    grid.appendChild(cell);
+  }
+
+  // default day panel: today
+  openDayPanel(today);
+}
+function openDayPanel(iso){
+  const panel = document.getElementById("calDayPanel");
+  const evs = store.calendarEvents
+    .filter(e=>e.date===iso)
+    .filter(e=>matchesFilter(e.title, e.notes, e.time))
+    .sort((a,b)=>(a.time||"").localeCompare(b.time||""));
+
+  const pretty = new Date(iso+"T00:00:00").toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  const listHtml = evs.length ? evs.map(ev=>`
+    <div class="item">
+      <div class="left">
+        <div style="min-width:0">
+          <div class="title">${escapeHtml(ev.title)}</div>
+          <div class="meta">${escapeHtml(ev.time || "No time")}${ev.notes ? " • "+escapeHtml(ev.notes) : ""}</div>
+        </div>
+      </div>
+      <div class="right">
+        <button class="iconbtn" data-del="${ev.id}">🗑️</button>
+      </div>
+    </div>
+  `).join("") : `<div class="empty">No events. Add one below.</div>`;
+
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div>
+        <div style="font-weight:650">${escapeHtml(pretty)}</div>
+        <div class="hint">Click a day on the calendar to switch.</div>
+      </div>
+      <button class="btn small" id="addEventInline">Add event</button>
+    </div>
+    <div class="divider"></div>
+    ${listHtml}
+    <div class="divider"></div>
+    <div id="eventForm" style="display:none">
+      <div class="row">
+        <div class="field">
+          <label>Title</label>
+          <input id="evTitle" placeholder="e.g. Dentist, Meeting, Gym..." />
+        </div>
+        <div class="field" style="flex:0 0 150px;min-width:150px">
+          <label>Time</label>
+          <input id="evTime" placeholder="18:30" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <input id="evNotes" placeholder="Optional notes..." />
+      </div>
+      <div class="row">
+        <button class="btn primary" id="evSave">Save</button>
+        <button class="btn" id="evCancel">Cancel</button>
+      </div>
+    </div>
+  `;
+
+  panel.querySelectorAll("[data-del]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const id = btn.getAttribute("data-del");
+      store.calendarEvents = store.calendarEvents.filter(e=>e.id!==id);
+      saveStore(); openDayPanel(iso); renderCalendar();
+    });
+  });
+
+  const addBtn = panel.querySelector("#addEventInline");
+  const form = panel.querySelector("#eventForm");
+  addBtn.addEventListener("click", ()=>{ form.style.display = ""; panel.querySelector("#evTitle").focus(); });
+
+  panel.querySelector("#evCancel").addEventListener("click", ()=>{ form.style.display="none"; });
+
+  panel.querySelector("#evSave").addEventListener("click", ()=>{
+    const title = panel.querySelector("#evTitle").value.trim();
+    const time = panel.querySelector("#evTime").value.trim();
+    const notes = panel.querySelector("#evNotes").value.trim();
+    if(!title) return;
+    store.calendarEvents.push({id:uid("ev"), date:iso, title, time, notes});
+    saveStore(); openDayPanel(iso); renderCalendar();
+  });
+}
+
+document.getElementById("calPrev").addEventListener("click", ()=>{
+  calCursor.setMonth(calCursor.getMonth()-1);
+  renderCalendar();
+});
+document.getElementById("calNext").addEventListener("click", ()=>{
+  calCursor.setMonth(calCursor.getMonth()+1);
+  renderCalendar();
+});
+document.getElementById("calNow").addEventListener("click", ()=>{
+  calCursor = new Date(); calCursor.setDate(1);
+  renderCalendar();
+});
+document.getElementById("calAdd").addEventListener("click", ()=>{
+  // quick add event on today
+  setActiveNav("calendar");
+  openDayPanel(todayISO());
+  const panel = document.getElementById("calDayPanel");
+  const addBtn = panel.querySelector("#addEventInline");
+  addBtn.click();
+});
+
+/* =========================
+   Journal
+========================= */
+function renderJournal(){
+  const dateEl = document.getElementById("jrDate");
+  if(!dateEl.value) dateEl.value = todayISO();
+  const list = document.getElementById("jrList");
+
+  const entries = [...store.journal]
+    .filter(j=>matchesFilter(j.text, j.tags?.join(",")||"", j.mood, j.date))
+    .sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+
+  list.innerHTML = "";
+  if(entries.length===0){
+    list.innerHTML = `<div class="empty">No entries yet. Write one on the left.</div>`;
+    return;
+  }
+
+  for(const j of entries){
+    const wrap = document.createElement("div");
+    wrap.className="item";
+    const tags = (j.tags||[]).slice(0,3).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join(" ");
+    wrap.innerHTML = `
+      <div class="left">
+        <div style="min-width:0">
+          <div class="title">${escapeHtml(j.date)} ${j.mood ? "• "+escapeHtml(j.mood) : ""}</div>
+          <div class="meta">${escapeHtml((j.text||"").slice(0,90))}${(j.text||"").length>90?"…":""}</div>
+          <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${tags}</div>
+        </div>
+      </div>
+      <div class="right">
+        <button class="iconbtn" title="Open">↗</button>
+        <button class="iconbtn" title="Delete">🗑️</button>
+      </div>
+    `;
+    const [btnOpen, btnDel] = wrap.querySelectorAll(".right .iconbtn");
+    btnOpen.addEventListener("click", ()=>{
+      document.getElementById("jrDate").value = j.date;
+      document.getElementById("jrMood").value = j.mood || "";
+      document.getElementById("jrTags").value = (j.tags||[]).join(", ");
+      document.getElementById("jrText").value = j.text || "";
+      window.scrollTo({top:0,behavior:"smooth"});
+    });
+    btnDel.addEventListener("click", ()=>{
+      store.journal = store.journal.filter(x=>x.id!==j.id);
+      saveStore(); renderJournal();
+    });
+    list.appendChild(wrap);
+  }
+}
+
+document.getElementById("jrSave").addEventListener("click", ()=>{
+  const date = document.getElementById("jrDate").value || todayISO();
+  const mood = document.getElementById("jrMood").value;
+  const tags = document.getElementById("jrTags").value.split(",").map(s=>s.trim()).filter(Boolean);
+  const text = document.getElementById("jrText").value.trim();
+  if(!text) return;
+
+  // overwrite entry for date if exists
+  const existing = store.journal.find(j=>j.date===date);
+  if(existing){
+    existing.mood = mood;
+    existing.tags = tags;
+    existing.text = text;
+  }else{
+    store.journal.push({id:uid("jr"), date, mood, tags, text, createdAt: Date.now()});
+  }
+  saveStore(); renderJournal(); refreshStats();
+});
+document.getElementById("jrClear").addEventListener("click", ()=>{
+  document.getElementById("jrMood").value = "";
+  document.getElementById("jrTags").value = "";
+  document.getElementById("jrText").value = "";
+});
+
+/* =========================
+   Assistant
+========================= */
+function syncAISettingsUI(){
+  document.getElementById("aiUseExternal").checked = !!store.settings.aiUseExternal;
+  document.getElementById("aiExternalConfig").style.display = store.settings.aiUseExternal ? "" : "none";
+  document.getElementById("aiEndpoint").value = store.settings.aiEndpoint || "";
+  document.getElementById("aiToken").value = store.settings.aiToken || "";
+}
+document.getElementById("aiUseExternal").addEventListener("change", (e)=>{
+  store.settings.aiUseExternal = !!e.target.checked;
+  saveStore(); syncAISettingsUI();
+});
+document.getElementById("aiEndpoint").addEventListener("input", (e)=>{
+  store.settings.aiEndpoint = e.target.value.trim();
+  saveStore();
+});
+document.getElementById("aiToken").addEventListener("input", (e)=>{
+  store.settings.aiToken = e.target.value;
+  saveStore();
+});
+
+function renderChat(){
+  const log = document.getElementById("chatLog");
+  log.innerHTML = "";
+  const msgs = store.chat.filter(m=>matchesFilter(m.text));
+  if(msgs.length===0){
+    log.innerHTML = `<div class="empty">No chat yet. Ask for planning help, meal ideas, budgeting, or journal prompts.</div>`;
+    return;
+  }
+  for(const m of msgs){
+    const wrap = document.createElement("div");
+    wrap.className = "bubble " + (m.role==="me" ? "me" : "");
+    const when = new Date(m.ts).toLocaleString();
+    wrap.innerHTML = `
+      <div class="who">
+        <span>${m.role==="me" ? "You" : "Assistant"}</span>
+        <span>${escapeHtml(when)}</span>
+      </div>
+      <div class="txt">${escapeHtml(m.text)}</div>
+    `;
+    log.appendChild(wrap);
+  }
+  // scroll to bottom
+  log.scrollTop = log.scrollHeight;
+}
+
+document.getElementById("aiSend").addEventListener("click", ()=>{
+  const text = document.getElementById("aiInput").value.trim();
+  if(!text) return;
+  document.getElementById("aiInput").value = "";
+  aiSendText(text);
+});
+
+document.getElementById("aiClear").addEventListener("click", ()=>{
+  store.chat = [];
+  saveStore(); renderChat();
+});
+
+document.querySelectorAll("[data-aiprompt]").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const prompt = btn.getAttribute("data-aiprompt");
+    aiSendText(prompt);
+  });
+});
+
+async function aiSendText(text){
+  // Save user message
+  store.chat.push({id:uid("msg"), role:"me", ts:Date.now(), text});
+  saveStore(); renderChat();
+
+  const context = buildAssistantContext();
+  let reply = "";
+
+  if(store.settings.aiUseExternal && store.settings.aiEndpoint){
+    reply = await callExternalAI(text, context).catch(err => {
+      return `I couldn't reach your external endpoint.\n\nDetails: ${String(err.message || err)}`;
+    });
+  }else{
+    reply = localCoach(text, context);
+  }
+
+  store.chat.push({id:uid("msg"), role:"assistant", ts:Date.now(), text: reply});
+  saveStore(); renderChat();
+}
+
+function buildAssistantContext(){
+  // Keep it short-ish; external endpoints can use it.
+  const t = store.tasks.filter(x=>!x.done).slice(0,15).map(x=>`- ${x.title}${x.due?` (due ${x.due})`:""}`).join("\n");
+  const h = store.habits.slice(0,10).map(x=>`- ${x.title} (streak ${calcStreak(x)}d)`).join("\n");
+  const today = todayISO();
+  const ev = store.calendarEvents.filter(e=>e.date===today).map(e=>`- ${e.time||""} ${e.title}`).join("\n");
+  const j = [...store.journal].sort((a,b)=> (b.date||"").localeCompare(a.date||"")).slice(0,3)
+    .map(x=>`- ${x.date} ${x.mood||""}: ${(x.text||"").slice(0,160)}`).join("\n");
+  const finMonth = ym(new Date());
+  const f = store.finance.filter(x=>(x.date||"").startsWith(finMonth)).slice(-10)
+    .map(x=>`- ${x.date} ${x.desc}: ${x.amount} (${x.cat})`).join("\n");
+
+  return {
+    today,
+    tasks: t || "(none)",
+    habits: h || "(none)",
+    todayEvents: ev || "(none)",
+    recentJournal: j || "(none)",
+    recentFinance: f || "(none)"
+  };
+}
+
+async function callExternalAI(userText, context){
+  const payload = { message: userText, context };
+  const headers = { "Content-Type": "application/json" };
+  const token = (store.settings.aiToken || "").trim();
+  if(token) headers["Authorization"] = "Bearer " + token;
+
+  const res = await fetch(store.settings.aiEndpoint, {
+    method:"POST",
+    headers,
+    body: JSON.stringify(payload)
+  });
+  if(!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  return (data && (data.reply || data.message || data.text)) ? String(data.reply || data.message || data.text) : JSON.stringify(data);
+}
+
+function localCoach(text, context){
+  // A simple offline coach: pattern-based + uses your stored data.
+  const lower = text.toLowerCase();
+
+  if(lower.includes("plan my week") || lower.includes("weekly plan")){
+    const tasks = store.tasks.filter(t=>!t.done).slice(0,7);
+    const habits = store.habits.slice(0,6);
+    const events = store.calendarEvents
+      .filter(e=>e.date>=todayISO() && e.date<=addDaysISO(todayISO(), 7))
+      .sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time))
+      .slice(0,10);
+
+    return [
+      "Here’s a simple weekly plan (offline coach):",
+      "",
+      "1) Top priorities (pick 3):",
+      ...tasks.slice(0,3).map((t,i)=>`   ${i+1}. ${t.title}${t.due?` (due ${t.due})`:""}`),
+      tasks.length===0 ? "   - (No tasks yet — add a few!)" : "",
+      "",
+      "2) Time blocks (based on upcoming events):",
+      ...(events.length? events.map(e=>`   - ${e.date} ${e.time||""} ${e.title}`) : ["   - (No upcoming events found.)"]),
+      "",
+      "3) Daily baseline habits:",
+      ...(habits.length? habits.map(h=>`   - ${h.title}`) : ["   - (No habits yet.)"]),
+      "",
+      "4) Minimum viable day (when busy):",
+      "   - Do 1 tiny task + 1 habit + prep 1 easy meal.",
+      "",
+      "If you want, tell me your available hours/day and I’ll turn this into a Mon–Sun schedule."
+    ].filter(Boolean).join("\n");
+  }
+
+  if(lower.includes("budget") || lower.includes("spending") || lower.includes("save")){
+    const month = ym(new Date());
+    const tx = store.finance.filter(x=>(x.date||"").startsWith(month));
+    const income = tx.filter(x=>Number(x.amount)>0).reduce((s,x)=>s+Number(x.amount),0);
+    const expense = tx.filter(x=>Number(x.amount)<0).reduce((s,x)=>s+Number(x.amount),0);
+    const net = income + expense;
+
+    const byCat = {};
+    for(const t of tx){
+      const amt = Number(t.amount)||0;
+      if(amt<0){
+        byCat[t.cat] = (byCat[t.cat]||0) + Math.abs(amt);
+      }
+    }
+    const topCats = Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
+    return [
+      `This month so far: Income ${fmtMoney(income)}, Expenses ${fmtMoney(expense)}, Net ${fmtMoney(net)}.`,
+      "",
+      topCats.length ? "Top spending categories:" : "No expenses logged yet — add a few transactions and I’ll analyse patterns.",
+      ...topCats.map(([c,v])=>`- ${c}: £${v.toFixed(2)}`),
+      "",
+      "3 quick nudges:",
+      "- Set a weekly spending cap for your #1 category.",
+      "- Make one subscription audit: cancel or downgrade 1 thing.",
+      "- Automate savings: move a small fixed amount right after payday.",
+      "",
+      "If you share your target savings amount, I can suggest a weekly number."
+    ].join("\n");
+  }
+
+  if(lower.includes("meal") || lower.includes("dinner") || lower.includes("grocery") || lower.includes("food")){
+    const ideas = [
+      "15-min options: omelette + salad, tuna wrap, stir-fry veg + noodles, chickpea curry (jar sauce).",
+      "Batch cook: chilli, roasted tray-bake chicken + veg, lentil soup, bolognese.",
+      "High-protein snacks: Greek yoghurt + fruit, cottage cheese, boiled eggs, hummus + carrots."
+    ];
+    return [
+      "Meal help (offline coach):",
+      "",
+      ...ideas,
+      "",
+      "Want me to tailor this? Tell me: (1) dietary preference, (2) time per meal, (3) budget level."
+    ].join("\n");
+  }
+
+  if(lower.includes("journal") || lower.includes("prompt") || lower.includes("reflect")){
+    return [
+      "Here are 5 journal prompts for today:",
+      "1) What’s one thing I’m proud of from the last 24 hours?",
+      "2) What’s draining me right now — and what’s one boundary I can set?",
+      "3) If today could be 1% better, what would I change first?",
+      "4) What do I want to remember from today?",
+      "5) What’s the next smallest step toward my most important goal?",
+      "",
+      "If you want, paste an entry and I’ll extract themes + next actions."
+    ].join("\n");
+  }
+
+  // Default: helpful meta response
+  return [
+    "I can help with planning, journaling, budgeting, meals, and productivity.",
+    "",
+    "Try one of these:",
+    "- “Create a weekly plan using my tasks + habits.”",
+    "- “Analyse my spending and suggest cuts.”",
+    "- “Generate a grocery list from my meal plan.”",
+    "- “Give me journal prompts based on my recent entries.”",
+    "",
+    "Or tell me what you’re aiming for this week."
+  ].join("\n");
+}
+
+/* =========================
+   Finance
+========================= */
+function renderFinance(){
+  const list = document.getElementById("finList");
+  const month = ym(new Date());
+  document.getElementById("finDate").value ||= todayISO();
+
+  const tx = [...store.finance]
+    .filter(t => (t.date||"").startsWith(month))
+    .filter(t => matchesFilter(t.desc, t.cat, String(t.amount), t.date))
+    .sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+
+  const income = tx.filter(x=>Number(x.amount)>0).reduce((s,x)=>s+Number(x.amount),0);
+  const expense = tx.filter(x=>Number(x.amount)<0).reduce((s,x)=>s+Number(x.amount),0);
+  const net = income + expense;
+
+  document.getElementById("finIncome").textContent = fmtMoney(income);
+  document.getElementById("finExpense").textContent = fmtMoney(expense);
+  const netEl = document.getElementById("finNet");
+  netEl.textContent = fmtMoney(net);
+  netEl.classList.toggle("pos", net>0);
+  netEl.classList.toggle("neg", net<0);
+  document.getElementById("finNetHint").textContent =
+    net>0 ? "Nice — you’re net positive." : (net<0 ? "You’re net negative — see top categories to cut." : "Break-even.");
+
+  // Sparklines (very simple bars based on last 10 tx)
+  sparkBars("sparkIncome", tx.filter(x=>Number(x.amount)>0).slice(-10).map(x=>Number(x.amount)));
+  sparkBars("sparkExpense", tx.filter(x=>Number(x.amount)<0).slice(-10).map(x=>Math.abs(Number(x.amount))));
+
+  list.innerHTML = "";
+  if(tx.length===0){
+    list.innerHTML = `<div class="empty">No transactions this month yet.</div>`;
+    return;
+  }
+  for(const t of tx){
+    const wrap = document.createElement("div");
+    wrap.className="item";
+    const amt = Number(t.amount)||0;
+    wrap.innerHTML = `
+      <div class="left">
+        <div style="min-width:0">
+          <div class="title">${escapeHtml(t.desc)} <span class="tag">${escapeHtml(t.cat)}</span></div>
+          <div class="meta">${escapeHtml(t.date)}</div>
+        </div>
+      </div>
+      <div class="right">
+        <span class="pill" style="border-color:${amt<0?"#fee2e2":"#bbf7d0"}; background:${amt<0?"#fff1f2":"#ecfdf5"}; color:${amt<0?"#b91c1c":"#166534"}">
+          ${fmtMoney(amt)}
+        </span>
+        <button class="iconbtn" title="Delete">🗑️</button>
+      </div>
+    `;
+    wrap.querySelector(".iconbtn").addEventListener("click", ()=>{
+      store.finance = store.finance.filter(x=>x.id!==t.id);
+      saveStore(); renderFinance();
+    });
+    list.appendChild(wrap);
+  }
+}
+function sparkBars(id, values){
+  const el = document.getElementById(id);
+  el.innerHTML = "";
+  const v = values.slice(-12);
+  const max = Math.max(1, ...v);
+  for(const n of v){
+    const b = document.createElement("div");
+    b.className="bar";
+    const h = clamp((n/max)*100, 6, 100);
+    b.style.height = h + "%";
+    el.appendChild(b);
+  }
+  if(v.length===0){
+    const b = document.createElement("div");
+    b.className="bar";
+    b.style.height="20%";
+    el.appendChild(b);
+  }
+}
+
+document.getElementById("finAdd").addEventListener("click", ()=>{
+  const date = document.getElementById("finDate").value || todayISO();
+  const desc = document.getElementById("finDesc").value.trim();
+  const amt = Number(document.getElementById("finAmt").value);
+  const cat = document.getElementById("finCat").value;
+  if(!desc || !Number.isFinite(amt)) return;
+
+  store.finance.push({id:uid("tx"), date, desc, amount: amt, cat, createdAt: Date.now()});
+  document.getElementById("finDesc").value="";
+  document.getElementById("finAmt").value="";
+  saveStore(); renderFinance(); refreshStats();
+});
+
+document.getElementById("finClearMonth").addEventListener("click", ()=>{
+  const month = ym(new Date());
+  store.finance = store.finance.filter(t => !(t.date||"").startsWith(month));
+  saveStore(); renderFinance();
+});
+
+/* =========================
+   Meals
+========================= */
+let mealAnchor = store.meals.anchorMonday || mondayOf(new Date()).toISOString().slice(0,10); // monday ISO
+function setMealAnchor(isoMonday){
+  mealAnchor = isoMonday;
+  store.meals.anchorMonday = isoMonday;
+  saveStore();
+}
+function weekDaysFromMonday(isoMon){
+  const base = new Date(isoMon+"T00:00:00");
+  const days = [];
+  for(let i=0;i<7;i++){
+    const d = new Date(base);
+    d.setDate(base.getDate()+i);
+    days.push(d.toISOString().slice(0,10));
+  }
+  return days;
+}
+function mealKey(isoDay, slot){ return `${isoDay}|${slot}`; }
+
+function renderMeals(){
+  const days = weekDaysFromMonday(mealAnchor);
+  const labelEl = document.getElementById("mealWeekLabel");
+  const start = new Date(days[0]+"T00:00:00");
+  const end = new Date(days[6]+"T00:00:00");
+  labelEl.textContent = `${start.toLocaleDateString(undefined,{month:"short",day:"numeric"})} – ${end.toLocaleDateString(undefined,{month:"short",day:"numeric"})}`;
+
+  // day selector for ingredients
+  const pick = document.getElementById("mealPickDay");
+  pick.innerHTML = "";
+  for(const d of days){
+    const opt = document.createElement("option");
+    opt.value = d;
+    opt.textContent = new Date(d+"T00:00:00").toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"});
+    pick.appendChild(opt);
+  }
+  pick.value = days[0];
+
+  // grid
+  const grid = document.getElementById("mealGrid");
+  grid.innerHTML = "";
+
+  const headBlank = document.createElement("div");
+  headBlank.className="wg-head";
+  headBlank.textContent="";
+  grid.appendChild(headBlank);
+
+  for(const d of days){
+    const hd = document.createElement("div");
+    hd.className="wg-head";
+    hd.textContent = new Date(d+"T00:00:00").toLocaleDateString(undefined,{weekday:"short"});
+    grid.appendChild(hd);
+  }
+
+  const slots = ["Breakfast","Lunch","Dinner","Snack"];
+  for(const slot of slots){
+    const lab = document.createElement("div");
+    lab.className="slotlabel";
+    lab.textContent=slot;
+    grid.appendChild(lab);
+
+    for(const d of days){
+      const cell = document.createElement("div");
+      cell.className="mealcell";
+      const k = mealKey(d, slot);
+      const val = (store.meals.plan && store.meals.plan[k]) || "";
+      cell.innerHTML = `
+        <input placeholder="Type meal..." value="${escapeAttr(val)}" />
+        <div class="hint" style="margin-top:-2px">${ingredientsSummary(d,slot)}</div>
+      `;
+      const input = cell.querySelector("input");
+      input.addEventListener("input", ()=>{
+        store.meals.plan = store.meals.plan || {};
+        store.meals.plan[k] = input.value;
+        saveStore();
+      });
+      grid.appendChild(cell);
+    }
+  }
+
+  renderGrocery();
+}
+
+function ingredientsSummary(day, slot){
+  const key = mealKey(day, slot);
+  const arr = (store.meals.ingredients && store.meals.ingredients[key]) || [];
+  if(!arr.length) return "No ingredients saved";
+  const show = arr.slice(0,4).join(", ");
+  return arr.length>4 ? `${show}…` : show;
+}
+
+function renderGrocery(){
+  const el = document.getElementById("groceryList");
+  const items = (store.meals.grocery || []).filter(x=>matchesFilter(x));
+  el.innerHTML="";
+  if(items.length===0){
+    el.innerHTML = `<div class="empty">No grocery items yet. Click “Build grocery list”.</div>`;
+    return;
+  }
+  items.forEach((it, idx)=>{
+    const wrap = document.createElement("div");
+    wrap.className="item";
+    wrap.innerHTML = `
+      <div class="left"><div class="title">${escapeHtml(it)}</div></div>
+      <div class="right"><button class="iconbtn" title="Remove">🗑️</button></div>
+    `;
+    wrap.querySelector(".iconbtn").addEventListener("click", ()=>{
+      store.meals.grocery.splice(idx,1);
+      saveStore(); renderGrocery();
+    });
+    el.appendChild(wrap);
+  });
+}
+
+document.getElementById("mealPrev").addEventListener("click", ()=>{
+  setMealAnchor(addDaysISO(mealAnchor, -7));
+  renderMeals();
+});
+document.getElementById("mealNext").addEventListener("click", ()=>{
+  setMealAnchor(addDaysISO(mealAnchor, 7));
+  renderMeals();
+});
+document.getElementById("mealThisWeek").addEventListener("click", ()=>{
+  setMealAnchor(mondayOf(new Date()).toISOString().slice(0,10));
+  renderMeals();
+});
+document.getElementById("mealBuildGrocery").addEventListener("click", ()=>{
+  const days = weekDaysFromMonday(mealAnchor);
+  const slots = ["Breakfast","Lunch","Dinner","Snack"];
+  const all = [];
+  for(const d of days){
+    for(const s of slots){
+      const key = mealKey(d,s);
+      const ing = (store.meals.ingredients && store.meals.ingredients[key]) || [];
+      for(const item of ing){
+        const cleaned = item.trim();
+        if(cleaned) all.push(cleaned);
+      }
+    }
+  }
+  // de-dupe (case-insensitive) while keeping original casing for first occurrence
+  const seen = new Set();
+  const uniq = [];
+  for(const it of all){
+    const k = it.toLowerCase();
+    if(seen.has(k)) continue;
+    seen.add(k);
+    uniq.push(it);
+  }
+  store.meals.grocery = uniq;
+  saveStore(); renderGrocery();
+});
+document.getElementById("mealClearGrocery").addEventListener("click", ()=>{
+  store.meals.grocery = [];
+  saveStore(); renderGrocery();
+});
+document.getElementById("mealCopyGrocery").addEventListener("click", async ()=>{
+  const text = (store.meals.grocery||[]).map(x=>`- ${x}`).join("\n");
+  try{ await navigator.clipboard.writeText(text); alert("Copied!"); }
+  catch(e){ alert("Copy failed (browser permission)."); }
+});
+
+document.getElementById("mealSaveIngredients").addEventListener("click", ()=>{
+  const day = document.getElementById("mealPickDay").value;
+  const slot = document.getElementById("mealPickSlot").value;
+  const ing = document.getElementById("mealIngredients").value.split(",").map(s=>s.trim()).filter(Boolean);
+  const key = mealKey(day,slot);
+  store.meals.ingredients = store.meals.ingredients || {};
+  store.meals.ingredients[key] = ing;
+  saveStore(); renderMeals();
+});
+document.getElementById("mealClearIngredients").addEventListener("click", ()=>{
+  const day = document.getElementById("mealPickDay").value;
+  const slot = document.getElementById("mealPickSlot").value;
+  const key = mealKey(day,slot);
+  store.meals.ingredients = store.meals.ingredients || {};
+  delete store.meals.ingredients[key];
+  saveStore(); renderMeals();
+});
+
+document.getElementById("mealAutoIdeas").addEventListener("click", ()=>{
+  // simple offline idea filler for blank meals
+  const ideas = {
+    Breakfast:["Overnight oats","Eggs + toast","Greek yoghurt + berries","Smoothie bowl"],
+    Lunch:["Chicken salad wrap","Tuna + rice bowl","Lentil soup","Pesto pasta"],
+    Dinner:["Stir-fry + noodles","Chilli con carne","Tray-bake salmon + veg","Curry + rice"],
+    Snack:["Fruit + nuts","Hummus + carrots","Protein shake","Dark chocolate + tea"]
+  };
+  const days = weekDaysFromMonday(mealAnchor);
+  const slots = ["Breakfast","Lunch","Dinner","Snack"];
+  for(const d of days){
+    for(const s of slots){
+      const k = mealKey(d,s);
+      store.meals.plan = store.meals.plan || {};
+      if(!store.meals.plan[k]){
+        const arr = ideas[s];
+        store.meals.plan[k] = arr[Math.floor(Math.random()*arr.length)];
+      }
+    }
+  }
+  saveStore(); renderMeals();
+});
+
+/* =========================
+   Quick Add modal + shortcuts
+========================= */
+const modal = document.getElementById("modal");
+document.getElementById("btnQuickAdd").addEventListener("click", openQuickAdd);
+document.getElementById("modalClose").addEventListener("click", closeQuickAdd);
+document.getElementById("qaClear").addEventListener("click", ()=>{
+  document.getElementById("qaTitle").value="";
+  renderQuickAddExtras();
+});
+document.getElementById("qaType").addEventListener("change", renderQuickAddExtras);
+
+function openQuickAdd(){
+  modal.style.display="";
+  document.getElementById("qaDate").value = todayISO();
+  document.getElementById("qaTitle").focus();
+  renderQuickAddExtras();
+}
+function closeQuickAdd(){ modal.style.display="none"; }
+function renderQuickAddExtras(){
+  const type = document.getElementById("qaType").value;
+  const extra = document.getElementById("qaExtra");
+  extra.innerHTML = "";
+  if(type==="task"){
+    extra.innerHTML = `
+      <div class="row">
+        <div class="field" style="flex:0 0 190px;min-width:190px">
+          <label>Due date</label>
+          <input id="qaDue" type="date" />
+        </div>
+      </div>
+    `;
+  }
+  if(type==="event"){
+    extra.innerHTML = `
+      <div class="row">
+        <div class="field" style="flex:0 0 160px;min-width:160px">
+          <label>Time</label>
+          <input id="qaTime" placeholder="18:30" />
+        </div>
+        <div class="field">
+          <label>Notes</label>
+          <input id="qaNotes" placeholder="optional notes..." />
+        </div>
+      </div>
+    `;
+  }
+  if(type==="journal"){
+    extra.innerHTML = `
+      <div class="row">
+        <div class="field" style="flex:0 0 190px;min-width:190px">
+          <label>Mood</label>
+          <select id="qaMood">
+            <option value="">—</option>
+            <option>😄 Great</option>
+            <option>🙂 Good</option>
+            <option>😐 Meh</option>
+            <option>😟 Low</option>
+            <option>😵 Overwhelmed</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Tags</label>
+          <input id="qaTags" placeholder="comma-separated..." />
+        </div>
+      </div>
+      <div class="field">
+        <label>Entry text</label>
+        <textarea id="qaBody" placeholder="Write your entry..."></textarea>
+      </div>
+    `;
+  }
+  if(type==="finance"){
+    extra.innerHTML = `
+      <div class="row">
+        <div class="field" style="flex:0 0 190px;min-width:190px">
+          <label>Amount</label>
+          <input id="qaAmt" type="number" step="0.01" placeholder="-12.50 or 1500" />
+        </div>
+        <div class="field" style="flex:0 0 200px;min-width:200px">
+          <label>Category</label>
+          <select id="qaCat">
+            <option>Income</option>
+            <option>Housing</option>
+            <option>Food</option>
+            <option>Transport</option>
+            <option>Health</option>
+            <option>Subscriptions</option>
+            <option>Fun</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+    `;
+  }
+  if(type==="meal"){
+    extra.innerHTML = `
+      <div class="row">
+        <div class="field" style="flex:0 0 190px;min-width:190px">
+          <label>Slot</label>
+          <select id="qaMealSlot">
+            <option>Breakfast</option>
+            <option>Lunch</option>
+            <option>Dinner</option>
+            <option>Snack</option>
+          </select>
+        </div>
+      </div>
+      <div class="hint">Adds a meal to the current meal-planner week.</div>
+    `;
+  }
+}
+
+document.getElementById("qaAdd").addEventListener("click", ()=>{
+  const type = document.getElementById("qaType").value;
+  const date = document.getElementById("qaDate").value || todayISO();
+  const title = document.getElementById("qaTitle").value.trim();
+  if(!title && type!=="journal") return;
+
+  if(type==="task"){
+    const due = document.getElementById("qaDue")?.value || date;
+    store.tasks.unshift({id:uid("task"), title, due, done:false, createdAt: Date.now()});
+    saveStore(); setActiveNav("home");
+  }
+  if(type==="event"){
+    const time = document.getElementById("qaTime")?.value.trim() || "";
+    const notes = document.getElementById("qaNotes")?.value.trim() || "";
+    store.calendarEvents.push({id:uid("ev"), date, title, time, notes});
+    saveStore(); setActiveNav("calendar");
+  }
+  if(type==="journal"){
+    const mood = document.getElementById("qaMood")?.value || "";
+    const tags = (document.getElementById("qaTags")?.value || "").split(",").map(s=>s.trim()).filter(Boolean);
+    const body = (document.getElementById("qaBody")?.value || "").trim();
+    if(!body) return;
+    const existing = store.journal.find(j=>j.date===date);
+    if(existing){
+      existing.mood=mood; existing.tags=tags; existing.text=body;
+    }else{
+      store.journal.push({id:uid("jr"), date, mood, tags, text:body, createdAt: Date.now()});
+    }
+    saveStore(); setActiveNav("journal");
+  }
+  if(type==="finance"){
+    const amt = Number(document.getElementById("qaAmt")?.value);
+    const cat = document.getElementById("qaCat")?.value || "Other";
+    if(!Number.isFinite(amt)) return;
+    store.finance.push({id:uid("tx"), date, desc:title, amount: amt, cat, createdAt: Date.now()});
+    saveStore(); setActiveNav("finance");
+  }
+  if(type==="meal"){
+    const slot = document.getElementById("qaMealSlot")?.value || "Dinner";
+    // keep meal week anchored; add into plan for that day
+    const k = mealKey(date, slot);
+    store.meals.plan = store.meals.plan || {};
+    store.meals.plan[k] = title;
+    // If date is outside current anchor week, shift anchor to its week so user sees it
+    setMealAnchor(mondayOf(new Date(date+"T00:00:00")).toISOString().slice(0,10));
+    saveStore(); setActiveNav("meals");
+  }
+
+  document.getElementById("qaTitle").value="";
+  closeQuickAdd();
+});
+
+/* Shortcuts */
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "/" && !isTyping()){
+    e.preventDefault();
+    globalSearchEl?.focus();
+  }
+  if(e.key.toLowerCase()==="a" && !isTyping()){
+    e.preventDefault();
+    openQuickAdd();
+  }
+  if(e.key.toLowerCase()==="t" && !isTyping()){
+    e.preventDefault();
+    jumpToday();
+  }
+  if(e.key==="Escape"){
+    if(modal.style.display!=="none") closeQuickAdd();
+  }
+});
+function isTyping(){
+  const el = document.activeElement;
+  return el && (el.tagName==="INPUT" || el.tagName==="TEXTAREA" || el.tagName==="SELECT");
+}
+function jumpToday(){
+  const t = todayISO();
+  if(currentView==="calendar"){
+    calCursor = new Date(); calCursor.setDate(1);
+    renderCalendar();
+    openDayPanel(t);
+  }else if(currentView==="journal"){
+    document.getElementById("jrDate").value = t;
+  }else if(currentView==="finance"){
+    document.getElementById("finDate").value = t;
+  }else if(currentView==="meals"){
+    setMealAnchor(mondayOf(new Date()).toISOString().slice(0,10));
+    renderMeals();
+  }else{
+    setActiveNav("home");
+  }
+}
+document.getElementById("btnToday").addEventListener("click", jumpToday);
+
+/* =========================
+   Export / Import / Reset
+========================= */
+document.getElementById("btnExport").addEventListener("click", ()=>{
+  const blob = new Blob([JSON.stringify(store, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href=url;
+  a.download = `lifeos-export-${todayISO()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+document.getElementById("btnImport").addEventListener("change", async (e)=>{
+  const file = e.target.files?.[0];
+  if(!file) return;
+  const text = await file.text();
+  try{
+    const data = JSON.parse(text);
+    // minimal validation
+    if(typeof data !== "object" || !data) throw new Error("Invalid file");
+    store = data;
+    saveStore();
+    setActiveNav(currentView);
+    alert("Imported successfully!");
+  }catch(err){
+    alert("Import failed: " + (err.message || err));
+  }finally{
+    e.target.value="";
+  }
+});
+
+document.getElementById("btnReset").addEventListener("click", ()=>{
+  const ok = confirm("Reset Life OS data in this browser? This cannot be undone.");
+  if(!ok) return;
+  localStorage.removeItem(STORE_KEY);
+  store = loadStore();
+  saveStore();
+  setActiveNav("home");
+});
+
+/* =========================
+   Helpers
+========================= */
+function addDaysISO(iso, days){
+  const d = new Date(iso+"T00:00:00");
+  d.setDate(d.getDate()+days);
+  return d.toISOString().slice(0,10);
+}
+function escapeHtml(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+function escapeAttr(s){
+  return escapeHtml(s).replaceAll("\n"," ");
+}
+
+/* =========================
+   Stats in sidebar
+========================= */
+function refreshStats(){
+  const tasksOpen = store.tasks.filter(t=>!t.done).length;
+  const habitsCount = store.habits.length;
+  const journalCount = store.journal.length;
+
+  document.getElementById("statTasks").textContent = tasksOpen;
+  document.getElementById("statHabits").textContent = habitsCount;
+  document.getElementById("statJournal").textContent = journalCount;
+
+  const month = ym(new Date());
+  const tx = store.finance.filter(x=>(x.date||"").startsWith(month));
+  const income = tx.filter(x=>Number(x.amount)>0).reduce((s,x)=>s+Number(x.amount),0);
+  const expense = tx.filter(x=>Number(x.amount)<0).reduce((s,x)=>s+Number(x.amount),0);
+  document.getElementById("statMonthNet").textContent = fmtMoney(income+expense);
+}
+
+/* =========================
+   Init
+========================= */
+(function init(){
+  // Default dates
+  document.getElementById("taskDue").value = "";
+  document.getElementById("jrDate").value = todayISO();
+  document.getElementById("finDate").value = todayISO();
+  document.getElementById("qaDate").value = todayISO();
+
+  // Ensure meal anchor exists
+  if(!store.meals) store.meals = { anchorMonday: mondayOf(new Date()).toISOString().slice(0,10), plan:{}, ingredients:{}, grocery:[] };
+  mealAnchor = store.meals.anchorMonday || mondayOf(new Date()).toISOString().slice(0,10);
+
+  // Quick add button also in top bar (already wired)
+  refreshStats();
+  setActiveNav("home");
+})();
+
+/* =========================
+   Top action: Quick add
+========================= */
+document.getElementById("btnQuickAdd").addEventListener("click", openQuickAdd);
+</script>
 </body>
 </html>
