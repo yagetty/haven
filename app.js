@@ -1,1115 +1,1361 @@
 /* ===================================
-APPLICATION STATE & STORAGE
+PREMIUM LIFE OS APPLICATION
+Enterprise-grade state management
 =================================== */
 
-// Global state object
-const AppState = {
-currentPage: ‘dashboard’,
+// ===== STATE MANAGEMENT =====
+
+const LifeOS = {
+version: ‘1.0.0’,
 currentViewer: ‘me’,
-currentTimeFrame: ‘today’,
-currentTaskFilter: ‘all’,
-selectedVibe: null,
-editingTask: null,
+currentPage: ‘command’,
+currentTaskView: ‘all’,
+currentTaskFilters: {
+priority: ‘all’,
+assignee: ‘all’
+},
+editingTaskId: null,
+selectedNoteId: null,
 
 ```
-// Data structures
-budget: {
-    income: [],
-    fixedExpenses: [],
-    variableExpenses: []
-},
-tasks: [],
-meals: {
-    saved: [],
-    suggestions: []
+data: {
+    tasks: [],
+    budget: {
+        transactions: [],
+        categories: ['Food', 'Transport', 'Utilities', 'Entertainment', 'Healthcare', 'Other']
+    },
+    calendar: {
+        events: [],
+        currentMonth: new Date().getMonth(),
+        currentYear: new Date().getFullYear()
+    },
+    health: {
+        logs: [],
+        goals: {}
+    },
+    notes: [],
+    meals: {
+        plan: {},
+        recipes: []
+    }
 }
 ```
 
 };
 
-// LocalStorage helpers
+// ===== LOCAL STORAGE =====
+
 const Storage = {
-save(key, data) {
-localStorage.setItem(key, JSON.stringify(data));
+keys: {
+TASKS: ‘life_os_tasks’,
+BUDGET: ‘life_os_budget’,
+CALENDAR: ‘life_os_calendar’,
+HEALTH: ‘life_os_health’,
+NOTES: ‘life_os_notes’,
+MEALS: ‘life_os_meals’,
+VIEWER: ‘life_os_viewer’
 },
 
 ```
+save(key, data) {
+    try {
+        localStorage.setItem(key, JSON.stringify(data));
+        return true;
+    } catch (e) {
+        console.error('Storage save failed:', e);
+        return false;
+    }
+},
+
 load(key, defaultValue = null) {
-    const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : defaultValue;
+    try {
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : defaultValue;
+    } catch (e) {
+        console.error('Storage load failed:', e);
+        return defaultValue;
+    }
 },
 
-saveState() {
-    this.save('budget', AppState.budget);
-    this.save('tasks', AppState.tasks);
-    this.save('meals', AppState.meals);
+saveAll() {
+    this.save(this.keys.TASKS, LifeOS.data.tasks);
+    this.save(this.keys.BUDGET, LifeOS.data.budget);
+    this.save(this.keys.CALENDAR, LifeOS.data.calendar);
+    this.save(this.keys.HEALTH, LifeOS.data.health);
+    this.save(this.keys.NOTES, LifeOS.data.notes);
+    this.save(this.keys.MEALS, LifeOS.data.meals);
+    this.save(this.keys.VIEWER, LifeOS.currentViewer);
 },
 
-loadState() {
-    AppState.budget = this.load('budget', AppState.budget);
-    AppState.tasks = this.load('tasks', AppState.tasks);
-    AppState.meals = this.load('meals', AppState.meals);
+loadAll() {
+    LifeOS.data.tasks = this.load(this.keys.TASKS, []);
+    LifeOS.data.budget = this.load(this.keys.BUDGET, LifeOS.data.budget);
+    LifeOS.data.calendar = this.load(this.keys.CALENDAR, LifeOS.data.calendar);
+    LifeOS.data.health = this.load(this.keys.HEALTH, LifeOS.data.health);
+    LifeOS.data.notes = this.load(this.keys.NOTES, []);
+    LifeOS.data.meals = this.load(this.keys.MEALS, LifeOS.data.meals);
+    LifeOS.currentViewer = this.load(this.keys.VIEWER, 'me');
 }
 ```
 
 };
 
-/* ===================================
-NAVIGATION & PAGE SWITCHING
-=================================== */
+// ===== NAVIGATION =====
 
 function initNavigation() {
-const navLinks = document.querySelectorAll(’.nav-link’);
-
-```
-navLinks.forEach(link => {
-    link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const page = link.dataset.page;
-        switchPage(page);
-    });
+document.querySelectorAll(’.nav-item’).forEach(link => {
+link.addEventListener(‘click’, (e) => {
+e.preventDefault();
+const page = link.dataset.page;
+navigateTo(page);
 });
-```
-
+});
 }
 
-function switchPage(pageName) {
-// Update state
-AppState.currentPage = pageName;
+function navigateTo(page) {
+LifeOS.currentPage = page;
 
 ```
-// Update nav links
-document.querySelectorAll('.nav-link').forEach(link => {
-    link.classList.toggle('active', link.dataset.page === pageName);
+// Update nav
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.page === page);
 });
 
 // Update pages
-document.querySelectorAll('.page').forEach(page => {
-    page.classList.remove('active');
+document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
 });
-document.getElementById(`${pageName}-page`).classList.add('active');
+document.getElementById(`${page}-page`).classList.add('active');
 
-// Refresh page content
-if (pageName === 'dashboard') renderDashboard();
-if (pageName === 'budget') renderBudgetPage();
-if (pageName === 'tasks') renderTasksPage();
-```
-
-}
-
-/* ===================================
-DASHBOARD PAGE
-=================================== */
-
-function initDashboard() {
-// Viewer selector
-document.querySelectorAll(’.viewer-btn’).forEach(btn => {
-btn.addEventListener(‘click’, () => {
-document.querySelectorAll(’.viewer-btn’).forEach(b => b.classList.remove(‘active’));
-btn.classList.add(‘active’);
-AppState.currentViewer = btn.dataset.viewer;
-renderDashboard();
-});
-});
-
-```
-// Time toggle
-document.querySelectorAll('.time-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        AppState.currentTimeFrame = btn.dataset.time;
+// Page-specific rendering
+switch(page) {
+    case 'command':
         renderDashboard();
-    });
-});
+        break;
+    case 'calendar':
+        renderCalendar();
+        break;
+    case 'tasks':
+        renderTasksPage();
+        break;
+    case 'budget':
+        renderBudgetPage();
+        break;
+    case 'health':
+        renderHealthPage();
+        break;
+    case 'notes':
+        renderNotesPage();
+        break;
+    case 'meals':
+        renderMealsPage();
+        break;
+}
 ```
 
 }
+
+// ===== DASHBOARD =====
 
 function renderDashboard() {
-renderScheduleCard();
-renderTasksCard();
-renderBudgetCard();
-renderMealsCard();
-renderPriorityCard();
-checkAlerts();
+updateCurrentDate();
+updateStats();
+renderTodayFocus();
+renderQuickTasks();
+renderBudgetSnapshot();
+renderWeekOverview();
+renderTodayMeals();
 }
 
-function renderScheduleCard() {
-const content = document.getElementById(‘schedule-content’);
-const count = document.getElementById(‘schedule-count’);
-
-```
-// Placeholder - no calendar integration yet
-content.innerHTML = '<p class="empty-state">No events scheduled</p>';
-count.textContent = '0';
-```
-
-}
-
-function renderTasksCard() {
-const content = document.getElementById(‘tasks-content’);
-const count = document.getElementById(‘tasks-count’);
-
-```
-const filteredTasks = filterTasks(AppState.tasks);
-const incompleteTasks = filteredTasks.filter(t => !t.completed);
-
-if (incompleteTasks.length === 0) {
-    content.innerHTML = '<p class="empty-state">No tasks due</p>';
-    count.textContent = '0';
-    return;
-}
-
-count.textContent = incompleteTasks.length;
-
-let html = '<div class="budget-overview">';
-incompleteTasks.slice(0, 5).forEach(task => {
-    const dueDate = new Date(task.dueDate);
-    const formattedDate = dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    
-    html += `
-        <div class="budget-row">
-            <span>${task.name}</span>
-            <span style="color: var(--text-tertiary); font-size: 0.8rem">${formattedDate}</span>
-        </div>
-    `;
+function updateCurrentDate() {
+const dateEl = document.getElementById(‘current-date’);
+if (dateEl) {
+const now = new Date();
+dateEl.textContent = now.toLocaleDateString(‘en-US’, {
+weekday: ‘long’,
+year: ‘numeric’,
+month: ‘long’,
+day: ‘numeric’
 });
-html += '</div>';
-
-content.innerHTML = html;
-```
-
+}
 }
 
-function renderBudgetCard() {
-const statusEl = document.getElementById(‘budget-status’);
-const incomeEl = document.getElementById(‘budget-income’);
-const expensesEl = document.getElementById(‘budget-expenses’);
-const remainingEl = document.getElementById(‘budget-remaining’);
+function updateStats() {
+// Tasks stat
+const activeTasks = LifeOS.data.tasks.filter(t => !t.completed).length;
+const tasksEl = document.getElementById(‘stat-tasks’);
+if (tasksEl) tasksEl.textContent = activeTasks;
 
 ```
-const totals = calculateBudgetTotals();
+// Budget stat
+const budgetTotal = calculateBudgetTotals();
+const budgetEl = document.getElementById('stat-budget');
+if (budgetEl) budgetEl.textContent = formatCurrency(budgetTotal.remaining);
 
-incomeEl.textContent = formatCurrency(totals.income);
-expensesEl.textContent = formatCurrency(totals.expenses);
-remainingEl.textContent = formatCurrency(totals.remaining);
+// Health stat (placeholder)
+const healthEl = document.getElementById('stat-health');
+if (healthEl) healthEl.textContent = '—';
 
-if (totals.remaining >= 0) {
-    statusEl.textContent = '✓';
-    statusEl.style.color = 'var(--accent-emerald)';
-    remainingEl.style.color = 'var(--accent-emerald)';
-} else {
-    statusEl.textContent = '!';
-    statusEl.style.color = 'var(--color-danger)';
-    remainingEl.style.color = 'var(--color-danger)';
-}
-```
-
-}
-
-function renderMealsCard() {
-const content = document.getElementById(‘meals-content’);
-const count = document.getElementById(‘meals-count’);
-
-```
-const savedMeals = AppState.meals.saved;
-
-if (savedMeals.length === 0) {
-    content.innerHTML = '<p class="empty-state">No meals planned</p>';
-    count.textContent = '0';
-    return;
-}
-
-count.textContent = savedMeals.length;
-
-let html = '<div class="budget-overview">';
-savedMeals.slice(0, 5).forEach(meal => {
-    html += `
-        <div class="budget-row">
-            <span>${meal.name}</span>
-            <span style="color: var(--text-tertiary); font-size: 0.8rem">${meal.time}min</span>
-        </div>
-    `;
-});
-html += '</div>';
-
-content.innerHTML = html;
-```
-
-}
-
-function renderPriorityCard() {
-const content = document.getElementById(‘priority-content’);
-
-```
-const highPriorityTasks = AppState.tasks
-    .filter(t => !t.completed && t.priority === 'high')
-    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
-
-if (highPriorityTasks.length === 0) {
-    content.innerHTML = '<p class="empty-state">No priorities set</p>';
-    return;
-}
-
-const topTask = highPriorityTasks[0];
-const dueDate = new Date(topTask.dueDate);
-const formattedDate = dueDate.toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    month: 'long', 
-    day: 'numeric' 
-});
-
-content.innerHTML = `
-    <div style="text-align: center; padding: var(--spacing-lg) 0;">
-        <h3 style="color: var(--accent-emerald); font-size: 1.5rem; margin-bottom: var(--spacing-sm);">
-            ${topTask.name}
-        </h3>
-        <p style="color: var(--text-secondary); margin-bottom: var(--spacing-xs);">
-            Due: ${formattedDate}
-        </p>
-        <p style="color: var(--text-tertiary); font-size: 0.875rem;">
-            ${topTask.category} • ${topTask.assignee}
-        </p>
-    </div>
-`;
-```
-
-}
-
-function checkAlerts() {
-const banner = document.getElementById(‘alert-banner’);
-
-```
-const overdueTasks = AppState.tasks.filter(t => {
-    if (t.completed) return false;
-    const dueDate = new Date(t.dueDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return dueDate < today;
-});
-
-if (overdueTasks.length > 0) {
-    banner.textContent = `⚠ You have ${overdueTasks.length} overdue task${overdueTasks.length > 1 ? 's' : ''}`;
-    banner.classList.remove('hidden');
-} else {
-    banner.classList.add('hidden');
-}
-```
-
-}
-
-function filterTasks(tasks) {
-const viewer = AppState.currentViewer;
-const timeFrame = AppState.currentTimeFrame;
-
-```
-return tasks.filter(task => {
-    // Filter by viewer
-    if (viewer !== 'all') {
-        if (viewer === 'household' && task.assignee !== 'household') return false;
-        if (viewer !== 'household' && task.assignee !== viewer) return false;
-    }
-    
-    // Filter by time frame
-    const dueDate = new Date(task.dueDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (timeFrame === 'today') {
-        const taskDate = new Date(dueDate);
-        taskDate.setHours(0, 0, 0, 0);
-        return taskDate.getTime() === today.getTime();
-    } else if (timeFrame === 'week') {
-        const weekFromNow = new Date(today);
-        weekFromNow.setDate(weekFromNow.getDate() + 7);
-        return dueDate >= today && dueDate <= weekFromNow;
-    }
-    
-    return true;
-});
-```
-
-}
-
-/* ===================================
-BUDGET PAGE
-=================================== */
-
-function initBudget() {
-document.getElementById(‘add-income’).addEventListener(‘click’, () => addBudgetItem(‘income’));
-document.getElementById(‘add-fixed-expense’).addEventListener(‘click’, () => addBudgetItem(‘fixedExpenses’));
-document.getElementById(‘add-variable-expense’).addEventListener(‘click’, () => addBudgetItem(‘variableExpenses’));
-document.getElementById(‘save-budget’).addEventListener(‘click’, saveBudget);
-}
-
-function renderBudgetPage() {
-renderBudgetList(‘income’, AppState.budget.income);
-renderBudgetList(‘fixedExpenses’, AppState.budget.fixedExpenses);
-renderBudgetList(‘variableExpenses’, AppState.budget.variableExpenses);
-updateBudgetTotals();
-}
-
-function addBudgetItem(type) {
-const item = {
-id: Date.now(),
-name: ‘’,
-amount: 0
-};
-
-```
-AppState.budget[type].push(item);
-renderBudgetPage();
-
-// Focus on the new item's name input
-setTimeout(() => {
-    const inputs = document.querySelectorAll(`#${type === 'income' ? 'income' : type.replace('Expenses', '-expenses')}-list input`);
-    if (inputs.length > 0) {
-        inputs[inputs.length - 2].focus();
-    }
+// Meals stat
+const mealCount = Object.values(LifeOS.data.meals.plan).reduce((sum, day) => {
+    return sum + Object.keys(day).length;
 }, 0);
+const mealsEl = document.getElementById('stat-meals');
+if (mealsEl) mealsEl.textContent = mealCount;
 ```
 
 }
 
-function renderBudgetList(type, items) {
-const listId = type === ‘income’ ? ‘income-list’ :
-type === ‘fixedExpenses’ ? ‘fixed-expenses-list’ :
-‘variable-expenses-list’;
+function renderTodayFocus() {
+const container = document.getElementById(‘today-focus’);
+if (!container) return;
 
 ```
-const list = document.getElementById(listId);
-
-if (items.length === 0) {
-    list.innerHTML = '<p class="empty-state" style="text-align: left; padding: var(--spacing-md) 0;">No items added</p>';
-    return;
-}
-
-let html = '';
-items.forEach(item => {
-    html += `
-        <div class="budget-item">
-            <input type="text" 
-                   placeholder="Name" 
-                   value="${item.name}" 
-                   onchange="updateBudgetItem('${type}', ${item.id}, 'name', this.value)"
-                   style="flex: 1; margin-right: var(--spacing-sm);">
-            <input type="number" 
-                   placeholder="0.00" 
-                   value="${item.amount}" 
-                   step="0.01"
-                   onchange="updateBudgetItem('${type}', ${item.id}, 'amount', parseFloat(this.value) || 0)">
-            <button onclick="deleteBudgetItem('${type}', ${item.id})">×</button>
-        </div>
-    `;
-});
-
-list.innerHTML = html;
-```
-
-}
-
-function updateBudgetItem(type, id, field, value) {
-const item = AppState.budget[type].find(i => i.id === id);
-if (item) {
-item[field] = value;
-updateBudgetTotals();
-}
-}
-
-function deleteBudgetItem(type, id) {
-AppState.budget[type] = AppState.budget[type].filter(i => i.id !== id);
-renderBudgetPage();
-}
-
-function calculateBudgetTotals() {
-const income = AppState.budget.income.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-const fixedExpenses = AppState.budget.fixedExpenses.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-const variableExpenses = AppState.budget.variableExpenses.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-const expenses = fixedExpenses + variableExpenses;
-const remaining = income - expenses;
-
-```
-return { income, expenses, remaining };
-```
-
-}
-
-function updateBudgetTotals() {
-const totals = calculateBudgetTotals();
-
-```
-// Update individual totals
-document.getElementById('total-income').textContent = formatCurrency(totals.income);
-document.getElementById('total-fixed').textContent = formatCurrency(
-    AppState.budget.fixedExpenses.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0)
-);
-document.getElementById('total-variable').textContent = formatCurrency(
-    AppState.budget.variableExpenses.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0)
-);
-
-// Update summary
-document.getElementById('summary-income').textContent = formatCurrency(totals.income);
-document.getElementById('summary-expenses').textContent = formatCurrency(totals.expenses);
-document.getElementById('summary-remaining').textContent = formatCurrency(totals.remaining);
-
-// Update progress bar
-const progress = document.getElementById('budget-progress');
-const percentage = totals.income > 0 ? (totals.expenses / totals.income) * 100 : 0;
-progress.style.width = `${Math.min(percentage, 100)}%`;
-
-// Color coding
-const remainingEl = document.getElementById('summary-remaining');
-if (totals.remaining >= 0) {
-    remainingEl.style.color = 'var(--accent-emerald)';
-} else {
-    remainingEl.style.color = 'var(--color-danger)';
-}
-```
-
-}
-
-function saveBudget() {
-Storage.saveState();
-showNotification(‘Budget saved successfully!’);
-}
-
-function formatCurrency(amount) {
-return new Intl.NumberFormat(‘en-US’, {
-style: ‘currency’,
-currency: ‘USD’
-}).format(amount);
-}
-
-/* ===================================
-TASKS PAGE
-=================================== */
-
-function initTasks() {
-// Add task button
-document.getElementById(‘add-task’).addEventListener(‘click’, openTaskModal);
-
-```
-// Modal controls
-document.querySelector('.modal-close').addEventListener('click', closeTaskModal);
-document.querySelector('.modal-cancel').addEventListener('click', closeTaskModal);
-document.getElementById('save-task').addEventListener('click', saveTask);
-
-// Filter buttons
-document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        AppState.currentTaskFilter = btn.dataset.filter;
-        renderTasksPage();
-    });
-});
-
-// Close modal on background click
-document.getElementById('task-modal').addEventListener('click', (e) => {
-    if (e.target.id === 'task-modal') closeTaskModal();
-});
-```
-
-}
-
-function renderTasksPage() {
-const list = document.getElementById(‘task-list’);
-const filter = AppState.currentTaskFilter;
-
-```
-let filteredTasks = [...AppState.tasks];
 const today = new Date();
 today.setHours(0, 0, 0, 0);
 
-// Apply filters
-if (filter === 'today') {
-    filteredTasks = filteredTasks.filter(t => {
-        const taskDate = new Date(t.dueDate);
-        taskDate.setHours(0, 0, 0, 0);
-        return taskDate.getTime() === today.getTime();
-    });
-} else if (filter === 'upcoming') {
-    filteredTasks = filteredTasks.filter(t => {
-        const taskDate = new Date(t.dueDate);
-        return taskDate > today && !t.completed;
-    });
-} else if (filter === 'overdue') {
-    filteredTasks = filteredTasks.filter(t => {
-        const taskDate = new Date(t.dueDate);
-        return taskDate < today && !t.completed;
-    });
+const todayTasks = LifeOS.data.tasks.filter(t => {
+    if (t.completed) return false;
+    const taskDate = new Date(t.dueDate);
+    taskDate.setHours(0, 0, 0, 0);
+    return taskDate.getTime() === today.getTime();
+});
+
+const highPriorityTask = todayTasks.find(t => t.priority === 'critical' || t.priority === 'high');
+
+if (highPriorityTask) {
+    container.innerHTML = `
+        <div style="text-align: center; padding: var(--space-8) 0;">
+            <div class="priority-badge priority-${highPriorityTask.priority}" style="display: inline-block; margin-bottom: var(--space-4);">
+                ${highPriorityTask.priority}
+            </div>
+            <h3 style="font-family: var(--font-display); font-size: 1.75rem; margin-bottom: var(--space-2); color: var(--gold);">
+                ${highPriorityTask.name}
+            </h3>
+            <p style="color: var(--text-secondary);">${highPriorityTask.category || 'Uncategorized'}</p>
+        </div>
+    `;
+} else {
+    container.innerHTML = `
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <p>Set your top priority for today</p>
+        </div>
+    `;
+}
+```
+
 }
 
-// Sort by date
-filteredTasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+function renderQuickTasks() {
+const container = document.getElementById(‘quick-tasks’);
+if (!container) return;
 
-if (filteredTasks.length === 0) {
-    list.innerHTML = '<p class="empty-state">No tasks found</p>';
+```
+const now = new Date();
+const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+const dueSoon = LifeOS.data.tasks
+    .filter(t => !t.completed && new Date(t.dueDate) <= weekFromNow)
+    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+    .slice(0, 5);
+
+if (dueSoon.length === 0) {
+    container.innerHTML = '<p class="empty-state-inline">No upcoming tasks</p>';
     return;
 }
 
-let html = '';
-filteredTasks.forEach(task => {
+container.innerHTML = dueSoon.map(task => {
     const dueDate = new Date(task.dueDate);
-    const formattedDate = dueDate.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric',
-        year: dueDate.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
-    });
+    const isOverdue = dueDate < now;
     
-    html += `
-        <div class="task-item ${task.completed ? 'completed' : ''}">
-            <input type="checkbox" 
-                   class="task-checkbox" 
-                   ${task.completed ? 'checked' : ''}
-                   onchange="toggleTaskComplete(${task.id})">
-            <div class="task-details">
-                <div class="task-name">${task.name}</div>
+    return `
+        <div class="task-item-compact">
+            <input type="checkbox" class="task-checkbox" onchange="toggleTaskComplete(${task.id})">
+            <div class="task-info">
+                <div class="task-title">${task.name}</div>
                 <div class="task-meta">
-                    <span class="task-priority ${task.priority}">${task.priority}</span>
-                    <span>${formattedDate}</span>
-                    <span>${task.category}</span>
-                    <span>${task.assignee}</span>
+                    <span class="priority-badge priority-${task.priority}">${task.priority}</span>
+                    <span style="color: ${isOverdue ? 'var(--ruby)' : 'var(--text-tertiary)'}">
+                        ${formatDate(dueDate)}
+                    </span>
                 </div>
-            </div>
-            <div class="task-actions">
-                <button onclick="editTask(${task.id})" title="Edit">✎</button>
-                <button onclick="deleteTask(${task.id})" title="Delete">×</button>
             </div>
         </div>
     `;
-});
-
-list.innerHTML = html;
+}).join('');
 ```
 
 }
 
-function openTaskModal(task = null) {
-const modal = document.getElementById(‘task-modal’);
-const title = document.getElementById(‘modal-title’);
+function renderBudgetSnapshot() {
+const totals = calculateBudgetTotals();
+const percentSpent = totals.income > 0 ? (totals.expenses / totals.income) * 100 : 0;
 
 ```
-if (task) {
-    // Edit mode
-    AppState.editingTask = task.id;
-    title.textContent = 'Edit Task';
-    document.getElementById('task-name').value = task.name;
-    document.getElementById('task-date').value = task.dueDate;
-    document.getElementById('task-priority').value = task.priority;
-    document.getElementById('task-category').value = task.category;
-    document.getElementById('task-assignee').value = task.assignee;
-} else {
-    // New task mode
-    AppState.editingTask = null;
-    title.textContent = 'New Task';
-    document.getElementById('task-name').value = '';
-    document.getElementById('task-date').value = '';
-    document.getElementById('task-priority').value = 'medium';
-    document.getElementById('task-category').value = '';
-    document.getElementById('task-assignee').value = 'me';
+// Update ring
+const ring = document.getElementById('budget-ring');
+if (ring) {
+    const circumference = 251.2;
+    const offset = circumference - (percentSpent / 100) * circumference;
+    ring.style.strokeDashoffset = offset;
 }
 
-modal.classList.remove('hidden');
+// Update percentage
+const percentEl = document.getElementById('budget-percent');
+if (percentEl) percentEl.textContent = `${Math.round(percentSpent)}%`;
+
+// Update details
+const details = document.getElementById('budget-snapshot-details');
+if (details) {
+    details.innerHTML = `
+        <div class="budget-row">
+            <span class="budget-row-label">Income</span>
+            <span class="budget-row-value">${formatCurrency(totals.income)}</span>
+        </div>
+        <div class="budget-row">
+            <span class="budget-row-label">Spent</span>
+            <span class="budget-row-value">${formatCurrency(totals.expenses)}</span>
+        </div>
+        <div class="budget-row">
+            <span class="budget-row-label">Remaining</span>
+            <span class="budget-row-value" style="color: var(--gold);">${formatCurrency(totals.remaining)}</span>
+        </div>
+    `;
+}
 ```
 
 }
 
-function closeTaskModal() {
-document.getElementById(‘task-modal’).classList.add(‘hidden’);
-AppState.editingTask = null;
-}
-
-function saveTask() {
-const name = document.getElementById(‘task-name’).value.trim();
-const dueDate = document.getElementById(‘task-date’).value;
-const priority = document.getElementById(‘task-priority’).value;
-const category = document.getElementById(‘task-category’).value.trim();
-const assignee = document.getElementById(‘task-assignee’).value;
+function renderWeekOverview() {
+const container = document.getElementById(‘week-overview’);
+if (!container) return;
 
 ```
-if (!name || !dueDate) {
-    alert('Please fill in task name and due date');
+const today = new Date();
+const startOfWeek = new Date(today);
+startOfWeek.setDate(today.getDate() - today.getDay());
+
+let html = '';
+for (let i = 0; i < 7; i++) {
+    const day = new Date(startOfWeek);
+    day.setDate(startOfWeek.getDate() + i);
+    
+    const isToday = day.toDateString() === today.toDateString();
+    const dayTasks = LifeOS.data.tasks.filter(t => {
+        const taskDate = new Date(t.dueDate);
+        return taskDate.toDateString() === day.toDateString() && !t.completed;
+    });
+    
+    html += `
+        <div class="day-cell ${isToday ? 'today' : ''}">
+            <div class="day-name">${day.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+            <div class="day-number">${day.getDate()}</div>
+            ${dayTasks.length > 0 ? `<div class="day-events">${dayTasks.length} tasks</div>` : ''}
+        </div>
+    `;
+}
+
+container.innerHTML = html;
+```
+
+}
+
+function renderTodayMeals() {
+const container = document.getElementById(‘today-meals’);
+if (!container) return;
+
+```
+const today = new Date().toLocaleDateString('en-US', { weekday: 'lowercase' });
+const todayMeals = LifeOS.data.meals.plan[today] || {};
+
+const mealTypes = ['breakfast', 'lunch', 'dinner'];
+const meals = mealTypes.filter(type => todayMeals[type]);
+
+if (meals.length === 0) {
+    container.innerHTML = '<p class="empty-state-inline">No meals planned</p>';
     return;
 }
 
-if (AppState.editingTask) {
-    // Update existing task
-    const task = AppState.tasks.find(t => t.id === AppState.editingTask);
+container.innerHTML = meals.map(type => `
+    <div style="margin-bottom: var(--space-2);">
+        <strong style="text-transform: capitalize; color: var(--text-primary);">${type}:</strong>
+        <span style="color: var(--text-secondary);"> ${todayMeals[type]}</span>
+    </div>
+`).join('');
+```
+
+}
+
+function refreshDashboard() {
+renderDashboard();
+showToast(‘Dashboard refreshed’);
+}
+
+// ===== TASKS =====
+
+function renderTasksPage() {
+const container = document.getElementById(‘tasks-container’);
+if (!container) return;
+
+```
+let tasks = filterTasks();
+
+if (tasks.length === 0) {
+    container.innerHTML = `
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 11 12 14 22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            <p>No tasks found</p>
+        </div>
+    `;
+    return;
+}
+
+container.innerHTML = tasks.map(task => {
+    const dueDate = new Date(task.dueDate);
+    return `
+        <div class="task-item ${task.completed ? 'completed' : ''}">
+            <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} 
+                   onchange="toggleTaskComplete(${task.id})">
+            <div class="task-details">
+                <div class="task-title">${task.name}</div>
+                <div class="task-meta">
+                    <span class="priority-badge priority-${task.priority}">${task.priority}</span>
+                    <span>${formatDate(dueDate)}</span>
+                    <span>${task.category || 'Uncategorized'}</span>
+                    <span>${task.assignee}</span>
+                </div>
+                ${task.notes ? `<p style="color: var(--text-tertiary); font-size: 0.875rem; margin-top: var(--space-2);">${task.notes}</p>` : ''}
+            </div>
+            <div class="task-actions">
+                <button class="task-action" onclick="editTask(${task.id})" title="Edit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <path d="M12 20h9"/>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                    </svg>
+                </button>
+                <button class="task-action" onclick="deleteTask(${task.id})" title="Delete">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `;
+}).join('');
+```
+
+}
+
+function filterTasks() {
+let tasks = […LifeOS.data.tasks];
+const view = LifeOS.currentTaskView;
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+```
+// Filter by view
+switch(view) {
+    case 'today':
+        tasks = tasks.filter(t => {
+            const taskDate = new Date(t.dueDate);
+            taskDate.setHours(0, 0, 0, 0);
+            return taskDate.getTime() === today.getTime() && !t.completed;
+        });
+        break;
+    case 'upcoming':
+        tasks = tasks.filter(t => {
+            const taskDate = new Date(t.dueDate);
+            return taskDate > today && !t.completed;
+        });
+        break;
+    case 'completed':
+        tasks = tasks.filter(t => t.completed);
+        break;
+    default: // all
+        tasks = tasks.filter(t => !t.completed);
+}
+
+// Filter by priority
+if (LifeOS.currentTaskFilters.priority !== 'all') {
+    tasks = tasks.filter(t => t.priority === LifeOS.currentTaskFilters.priority);
+}
+
+// Filter by assignee
+if (LifeOS.currentTaskFilters.assignee !== 'all') {
+    tasks = tasks.filter(t => t.assignee === LifeOS.currentTaskFilters.assignee);
+}
+
+// Sort by due date
+tasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+
+return tasks;
+```
+
+}
+
+function changeTaskView(view) {
+LifeOS.currentTaskView = view;
+document.querySelectorAll(’.view-btn’).forEach(btn => {
+btn.classList.toggle(‘active’, btn.dataset.view === view);
+});
+renderTasksPage();
+}
+
+function filterTasksByPriority(priority) {
+LifeOS.currentTaskFilters.priority = priority;
+renderTasksPage();
+}
+
+function filterTasksByAssignee(assignee) {
+LifeOS.currentTaskFilters.assignee = assignee;
+renderTasksPage();
+}
+
+function openTaskModal(task = null) {
+LifeOS.editingTaskId = task ? task.id : null;
+
+```
+const modal = document.getElementById('task-modal');
+const title = document.getElementById('task-modal-title');
+
+if (task) {
+    title.textContent = 'Edit Task';
+    document.getElementById('task-name-input').value = task.name;
+    document.getElementById('task-date-input').value = task.dueDate;
+    document.getElementById('task-priority-input').value = task.priority;
+    document.getElementById('task-category-input').value = task.category || '';
+    document.getElementById('task-assignee-input').value = task.assignee;
+    document.getElementById('task-notes-input').value = task.notes || '';
+} else {
+    title.textContent = 'New Task';
+    document.getElementById('task-name-input').value = '';
+    document.getElementById('task-date-input').value = '';
+    document.getElementById('task-priority-input').value = 'medium';
+    document.getElementById('task-category-input').value = '';
+    document.getElementById('task-assignee-input').value = 'me';
+    document.getElementById('task-notes-input').value = '';
+}
+
+openModal('task-modal');
+```
+
+}
+
+function openQuickTask() {
+openTaskModal();
+}
+
+function saveTask() {
+const name = document.getElementById(‘task-name-input’).value.trim();
+const dueDate = document.getElementById(‘task-date-input’).value;
+const priority = document.getElementById(‘task-priority-input’).value;
+const category = document.getElementById(‘task-category-input’).value.trim();
+const assignee = document.getElementById(‘task-assignee-input’).value;
+const notes = document.getElementById(‘task-notes-input’).value.trim();
+
+```
+if (!name || !dueDate) {
+    showToast('Please fill in task name and due date', 'error');
+    return;
+}
+
+if (LifeOS.editingTaskId) {
+    const task = LifeOS.data.tasks.find(t => t.id === LifeOS.editingTaskId);
     if (task) {
         task.name = name;
         task.dueDate = dueDate;
         task.priority = priority;
         task.category = category;
         task.assignee = assignee;
+        task.notes = notes;
     }
 } else {
-    // Create new task
-    const task = {
+    LifeOS.data.tasks.push({
         id: Date.now(),
         name,
         dueDate,
         priority,
         category,
         assignee,
-        completed: false
-    };
-    AppState.tasks.push(task);
+        notes,
+        completed: false,
+        createdAt: new Date().toISOString()
+    });
 }
 
-Storage.saveState();
+Storage.saveAll();
+closeModal('task-modal');
 renderTasksPage();
-closeTaskModal();
+renderDashboard();
+showToast('Task saved successfully');
 ```
 
 }
 
-function toggleTaskComplete(id) {
-const task = AppState.tasks.find(t => t.id === id);
-if (task) {
-task.completed = !task.completed;
-Storage.saveState();
-renderTasksPage();
-renderDashboard();
-}
-}
-
 function editTask(id) {
-const task = AppState.tasks.find(t => t.id === id);
-if (task) {
-openTaskModal(task);
-}
+const task = LifeOS.data.tasks.find(t => t.id === id);
+if (task) openTaskModal(task);
 }
 
 function deleteTask(id) {
 if (confirm(‘Are you sure you want to delete this task?’)) {
-AppState.tasks = AppState.tasks.filter(t => t.id !== id);
-Storage.saveState();
+LifeOS.data.tasks = LifeOS.data.tasks.filter(t => t.id !== id);
+Storage.saveAll();
+renderTasksPage();
+renderDashboard();
+showToast(‘Task deleted’);
+}
+}
+
+function toggleTaskComplete(id) {
+const task = LifeOS.data.tasks.find(t => t.id === id);
+if (task) {
+task.completed = !task.completed;
+Storage.saveAll();
 renderTasksPage();
 renderDashboard();
 }
 }
 
-/* ===================================
-MEALS PAGE
-=================================== */
+// ===== BUDGET =====
 
-function initMeals() {
-// Vibe selector
-document.querySelectorAll(’.vibe-btn’).forEach(btn => {
-btn.addEventListener(‘click’, () => {
-document.querySelectorAll(’.vibe-btn’).forEach(b => b.classList.remove(‘active’));
-btn.classList.add(‘active’);
-AppState.selectedVibe = btn.dataset.vibe;
-});
-});
+function renderBudgetPage() {
+updateBudgetSummary();
+renderCategoryBreakdown();
+renderSavingsRate();
+renderTransactions();
+}
+
+function updateBudgetSummary() {
+const totals = calculateBudgetTotals();
 
 ```
-// Suggest meals button
-document.getElementById('suggest-meals').addEventListener('click', suggestMeals);
+const incomeEl = document.getElementById('total-income');
+const expensesEl = document.getElementById('total-expenses');
+const balanceEl = document.getElementById('net-balance');
+
+if (incomeEl) incomeEl.textContent = formatCurrency(totals.income);
+if (expensesEl) expensesEl.textContent = formatCurrency(totals.expenses);
+if (balanceEl) {
+    balanceEl.textContent = formatCurrency(totals.remaining);
+    balanceEl.style.color = totals.remaining >= 0 ? 'var(--emerald)' : 'var(--ruby)';
+}
 ```
 
 }
 
-function suggestMeals() {
-const ingredients = document.getElementById(‘ingredients-input’).value.trim();
-const time = document.getElementById(‘time-available’).value;
-const vibe = AppState.selectedVibe;
+function calculateBudgetTotals() {
+const now = new Date();
+const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
 ```
-if (!ingredients) {
-    alert('Please enter some ingredients');
+const monthTransactions = LifeOS.data.budget.transactions.filter(t => {
+    const tDate = new Date(t.date);
+    return tDate >= firstDay && tDate <= lastDay;
+});
+
+const income = monthTransactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + t.amount, 0);
+
+const expenses = monthTransactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + t.amount, 0);
+
+return {
+    income,
+    expenses,
+    remaining: income - expenses
+};
+```
+
+}
+
+function renderCategoryBreakdown() {
+const container = document.getElementById(‘category-breakdown’);
+if (!container) return;
+
+```
+const now = new Date();
+const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+const expenses = LifeOS.data.budget.transactions.filter(t => {
+    const tDate = new Date(t.date);
+    return t.type === 'expense' && tDate >= firstDay && tDate <= lastDay;
+});
+
+const byCategory = {};
+expenses.forEach(t => {
+    byCategory[t.category] = (byCategory[t.category] || 0) + t.amount;
+});
+
+const sorted = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
+
+if (sorted.length === 0) {
+    container.innerHTML = '<p class="empty-state-inline">No expenses this month</p>';
     return;
 }
 
-// Generate mock suggestions based on inputs
-const suggestions = generateMealSuggestions(ingredients, time, vibe);
-AppState.meals.suggestions = suggestions;
-
-renderMealSuggestions();
+container.innerHTML = sorted.slice(0, 5).map(([category, amount]) => `
+    <div class="category-item">
+        <span class="category-name">${category}</span>
+        <span class="category-amount">${formatCurrency(amount)}</span>
+    </div>
+`).join('');
 ```
 
 }
 
-function generateMealSuggestions(ingredients, time, vibe) {
-// This is placeholder logic - in production, this could integrate with an AI API
-const ingredientList = ingredients.toLowerCase().split(’,’).map(i => i.trim());
-const timeNum = parseInt(time);
+function renderSavingsRate() {
+const totals = calculateBudgetTotals();
+const savingsRate = totals.income > 0 ? ((totals.remaining / totals.income) * 100) : 0;
 
 ```
-const mealTemplates = {
-    quick: [
-        { name: 'Stir Fry', time: 15, base: ['rice', 'vegetables', 'chicken', 'soy sauce'] },
-        { name: 'Pasta Aglio e Olio', time: 20, base: ['pasta', 'garlic', 'olive oil'] },
-        { name: 'Quesadilla', time: 10, base: ['tortilla', 'cheese'] }
-    ],
-    comfort: [
-        { name: 'Mac and Cheese', time: 30, base: ['pasta', 'cheese', 'milk'] },
-        { name: 'Chicken Soup', time: 45, base: ['chicken', 'vegetables', 'broth'] },
-        { name: 'Mashed Potatoes', time: 30, base: ['potatoes', 'butter', 'milk'] }
-    ],
-    healthy: [
-        { name: 'Grilled Chicken Salad', time: 25, base: ['chicken', 'lettuce', 'vegetables'] },
-        { name: 'Buddha Bowl', time: 30, base: ['rice', 'vegetables', 'chickpeas'] },
-        { name: 'Salmon with Veggies', time: 35, base: ['salmon', 'vegetables'] }
-    ],
-    fancy: [
-        { name: 'Pan-Seared Salmon', time: 30, base: ['salmon', 'lemon', 'herbs'] },
-        { name: 'Risotto', time: 45, base: ['rice', 'broth', 'parmesan'] },
-        { name: 'Stuffed Chicken Breast', time: 60, base: ['chicken', 'cheese', 'spinach'] }
-    ]
+const fill = document.getElementById('savings-fill');
+const percent = document.getElementById('savings-percentage');
+
+if (fill) fill.style.width = `${Math.max(0, savingsRate)}%`;
+if (percent) percent.textContent = `${Math.round(savingsRate)}%`;
+```
+
+}
+
+function renderTransactions() {
+const container = document.getElementById(‘transactions-list’);
+if (!container) return;
+
+```
+const transactions = [...LifeOS.data.budget.transactions]
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 20);
+
+if (transactions.length === 0) {
+    container.innerHTML = '<p class="empty-state-inline">No transactions yet</p>';
+    return;
+}
+
+container.innerHTML = transactions.map(t => {
+    const date = new Date(t.date);
+    return `
+        <div class="transaction-item">
+            <div class="transaction-info">
+                <div class="transaction-name">${t.description}</div>
+                <div class="transaction-meta">${t.category} • ${formatDate(date)}</div>
+            </div>
+            <div class="transaction-amount ${t.type}">
+                ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+            </div>
+        </div>
+    `;
+}).join('');
+```
+
+}
+
+function openTransactionModal() {
+const description = prompt(‘Transaction description:’);
+if (!description) return;
+
+```
+const amount = parseFloat(prompt('Amount:'));
+if (isNaN(amount) || amount <= 0) return;
+
+const type = confirm('Is this income? (Cancel for expense)') ? 'income' : 'expense';
+const category = type === 'expense' ? 
+    prompt('Category:', LifeOS.data.budget.categories[0]) : 
+    'Income';
+
+LifeOS.data.budget.transactions.push({
+    id: Date.now(),
+    description,
+    amount,
+    type,
+    category,
+    date: new Date().toISOString()
+});
+
+Storage.saveAll();
+renderBudgetPage();
+renderDashboard();
+showToast('Transaction added');
+```
+
+}
+
+function filterTransactions(filter) {
+// Implementation for filtering transactions
+renderTransactions();
+}
+
+function exportBudgetData() {
+const data = JSON.stringify(LifeOS.data.budget, null, 2);
+const blob = new Blob([data], { type: ‘application/json’ });
+const url = URL.createObjectURL(blob);
+const a = document.createElement(‘a’);
+a.href = url;
+a.download = `budget-export-${new Date().toISOString().split('T')[0]}.json`;
+a.click();
+URL.revokeObjectURL(url);
+showToast(‘Budget data exported’);
+}
+
+// ===== CALENDAR =====
+
+function renderCalendar() {
+renderCalendarGrid();
+}
+
+function renderCalendarGrid() {
+const grid = document.getElementById(‘calendar-grid’);
+const monthYear = document.getElementById(‘calendar-month-year’);
+if (!grid || !monthYear) return;
+
+```
+const { currentMonth, currentYear } = LifeOS.data.calendar;
+const firstDay = new Date(currentYear, currentMonth, 1);
+const lastDay = new Date(currentYear, currentMonth + 1, 0);
+const startDay = firstDay.getDay();
+const daysInMonth = lastDay.getDate();
+
+monthYear.textContent = firstDay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+let html = '';
+
+// Day headers
+['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
+    html += `<div style="padding: var(--space-2); text-align: center; color: var(--text-tertiary); font-weight: 600; font-size: 0.875rem;">${day}</div>`;
+});
+
+// Empty cells before first day
+for (let i = 0; i < startDay; i++) {
+    html += '<div></div>';
+}
+
+// Days
+for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(currentYear, currentMonth, day);
+    const isToday = date.toDateString() === new Date().toDateString();
+    
+    html += `
+        <div class="day-cell ${isToday ? 'today' : ''}" onclick="selectCalendarDay(${day})">
+            <div class="day-number">${day}</div>
+        </div>
+    `;
+}
+
+grid.innerHTML = html;
+```
+
+}
+
+function changeMonth(delta) {
+LifeOS.data.calendar.currentMonth += delta;
+
+```
+if (LifeOS.data.calendar.currentMonth > 11) {
+    LifeOS.data.calendar.currentMonth = 0;
+    LifeOS.data.calendar.currentYear++;
+} else if (LifeOS.data.calendar.currentMonth < 0) {
+    LifeOS.data.calendar.currentMonth = 11;
+    LifeOS.data.calendar.currentYear--;
+}
+
+Storage.saveAll();
+renderCalendarGrid();
+```
+
+}
+
+function selectCalendarDay(day) {
+// Handle day selection
+showToast(`Selected: ${LifeOS.data.calendar.currentMonth + 1}/${day}/${LifeOS.data.calendar.currentYear}`);
+}
+
+function openEventModal() {
+showToast(‘Event creation coming soon’);
+}
+
+function filterCalendar(type) {
+// Implementation for calendar filtering
+}
+
+// ===== HEALTH =====
+
+function renderHealthPage() {
+renderHealthMetrics();
+}
+
+function renderHealthMetrics() {
+// Placeholder implementation
+const stepsEl = document.getElementById(‘steps-today’);
+const waterEl = document.getElementById(‘water-today’);
+const sleepEl = document.getElementById(‘sleep-today’);
+
+```
+if (stepsEl) stepsEl.textContent = '0';
+if (waterEl) waterEl.textContent = '0';
+if (sleepEl) sleepEl.textContent = '0h';
+```
+
+}
+
+function logHealthData() {
+showToast(‘Health logging coming soon’);
+}
+
+function saveJournalEntry() {
+const journal = document.getElementById(‘wellness-journal’);
+if (!journal) return;
+
+```
+const entry = journal.value.trim();
+if (!entry) return;
+
+LifeOS.data.health.logs.push({
+    id: Date.now(),
+    entry,
+    date: new Date().toISOString()
+});
+
+Storage.saveAll();
+journal.value = '';
+showToast('Journal entry saved');
+```
+
+}
+
+// ===== NOTES =====
+
+function renderNotesPage() {
+renderNotesList();
+}
+
+function renderNotesList() {
+const list = document.getElementById(‘notes-list’);
+if (!list) return;
+
+```
+if (LifeOS.data.notes.length === 0) {
+    list.innerHTML = '<p class="empty-state-inline">No notes yet</p>';
+    return;
+}
+
+list.innerHTML = LifeOS.data.notes.map(note => `
+    <div class="note-item ${note.id === LifeOS.selectedNoteId ? 'active' : ''}" 
+         onclick="selectNote(${note.id})">
+        <div class="note-title">${note.title}</div>
+        <div class="note-preview">${note.content.substring(0, 100)}...</div>
+    </div>
+`).join('');
+```
+
+}
+
+function createNote() {
+const title = prompt(‘Note title:’);
+if (!title) return;
+
+```
+const note = {
+    id: Date.now(),
+    title,
+    content: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
 };
 
-const vibeTemplates = vibe ? mealTemplates[vibe] : Object.values(mealTemplates).flat();
+LifeOS.data.notes.unshift(note);
+LifeOS.selectedNoteId = note.id;
 
-// Filter meals that match time and have some ingredient overlap
-const suggestions = vibeTemplates
-    .filter(meal => meal.time <= timeNum)
-    .map(meal => {
-        const matchCount = meal.base.filter(ingredient => 
-            ingredientList.some(userIng => 
-                userIng.includes(ingredient) || ingredient.includes(userIng)
-            )
-        ).length;
-        return { ...meal, matchCount };
-    })
-    .sort((a, b) => b.matchCount - a.matchCount)
-    .slice(0, 3)
-    .map(meal => ({
-        name: meal.name,
-        time: meal.time,
-        description: `A delicious ${vibe || 'homemade'} meal ready in ${meal.time} minutes`,
-        ingredients: meal.base
-    }));
-
-return suggestions.length > 0 ? suggestions : [
-    {
-        name: 'Custom Creation',
-        time: timeNum,
-        description: `Create something unique with your ingredients in ${timeNum} minutes`,
-        ingredients: ingredientList
-    }
-];
+Storage.saveAll();
+renderNotesList();
+selectNote(note.id);
 ```
 
 }
 
-function renderMealSuggestions() {
-const container = document.getElementById(‘meal-suggestions’);
-const suggestions = AppState.meals.suggestions;
+function selectNote(id) {
+LifeOS.selectedNoteId = id;
+const note = LifeOS.data.notes.find(n => n.id === id);
+if (!note) return;
 
 ```
-if (suggestions.length === 0) {
-    container.innerHTML = '<p class="empty-state">Enter ingredients and preferences to see suggestions</p>';
-    return;
-}
-
-let html = '';
-suggestions.forEach(meal => {
-    html += `
-        <div class="meal-card">
-            <h3>${meal.name}</h3>
-            <p>${meal.description}</p>
-            <p style="font-size: 0.8rem; color: var(--text-tertiary);">
-                Ingredients: ${meal.ingredients.join(', ')}
+const editor = document.getElementById('notes-editor');
+if (editor) {
+    editor.innerHTML = `
+        <div style="margin-bottom: var(--space-6);">
+            <h2 style="font-family: var(--font-display); font-size: 2rem; margin-bottom: var(--space-2);">
+                ${note.title}
+            </h2>
+            <p style="color: var(--text-tertiary); font-size: 0.875rem;">
+                Last edited: ${formatDate(new Date(note.updatedAt))}
             </p>
-            <button onclick="saveMeal('${meal.name}', ${meal.time})">Add to Plan</button>
         </div>
+        <textarea class="wellness-journal" style="min-height: 400px;" 
+                  placeholder="Start writing..." 
+                  onchange="updateNoteContent(${note.id}, this.value)">${note.content}</textarea>
     `;
-});
+}
 
-container.innerHTML = html;
+renderNotesList();
 ```
 
 }
 
-function saveMeal(name, time) {
-const meal = { name, time, id: Date.now() };
-AppState.meals.saved.push(meal);
-Storage.saveState();
-renderSavedMeals();
+function updateNoteContent(id, content) {
+const note = LifeOS.data.notes.find(n => n.id === id);
+if (note) {
+note.content = content;
+note.updatedAt = new Date().toISOString();
+Storage.saveAll();
+}
+}
+
+function searchNotes(query) {
+// Implementation for note search
+}
+
+function openQuickNote() {
+navigateTo(‘notes’);
+setTimeout(() => createNote(), 100);
+}
+
+// ===== MEALS =====
+
+function renderMealsPage() {
+renderWeekMealGrid();
+}
+
+function renderWeekMealGrid() {
+const grid = document.getElementById(‘week-meal-grid’);
+if (!grid) return;
+
+```
+const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const mealTypes = ['breakfast', 'lunch', 'dinner'];
+
+grid.innerHTML = days.map(day => {
+    const dayMeals = LifeOS.data.meals.plan[day] || {};
+    
+    return `
+        <div class="meal-day">
+            <div class="meal-day-name">${day}</div>
+            ${mealTypes.map(type => {
+                const meal = dayMeals[type];
+                return `
+                    <div class="meal-slot">
+                        <div class="meal-time">${type}</div>
+                        <div>${meal || '—'}</div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+}).join('');
+```
+
+}
+
+function addQuickMeal() {
+const name = document.getElementById(‘quick-meal-name’).value.trim();
+const day = document.getElementById(‘quick-meal-day’).value;
+const time = document.getElementById(‘quick-meal-time’).value;
+
+```
+if (!name) {
+    showToast('Please enter a meal name', 'error');
+    return;
+}
+
+if (!LifeOS.data.meals.plan[day]) {
+    LifeOS.data.meals.plan[day] = {};
+}
+
+LifeOS.data.meals.plan[day][time] = name;
+
+Storage.saveAll();
+renderWeekMealGrid();
 renderDashboard();
-showNotification(`${name} added to meal plan!`);
-}
 
-function renderSavedMeals() {
-const container = document.getElementById(‘saved-meals’);
-const meals = AppState.meals.saved;
-
-```
-if (meals.length === 0) {
-    container.innerHTML = '<p class="empty-state">No meals planned yet</p>';
-    return;
-}
-
-let html = '';
-meals.forEach(meal => {
-    html += `
-        <div class="meal-card">
-            <h3>${meal.name}</h3>
-            <p>Prep time: ${meal.time} minutes</p>
-            <button onclick="removeMeal(${meal.id})" style="background: rgba(239, 68, 68, 0.1); border-color: var(--color-danger); color: var(--color-danger);">
-                Remove
-            </button>
-        </div>
-    `;
-});
-
-container.innerHTML = html;
+document.getElementById('quick-meal-name').value = '';
+showToast('Meal added to plan');
 ```
 
 }
 
-function removeMeal(id) {
-AppState.meals.saved = AppState.meals.saved.filter(m => m.id !== id);
-Storage.saveState();
-renderSavedMeals();
+function generateMealPlan() {
+showToast(‘AI meal plan generation coming soon’);
+}
+
+// ===== VIEWER MANAGEMENT =====
+
+function showViewerModal() {
+openModal(‘viewer-modal’);
+}
+
+function switchViewer(viewer) {
+LifeOS.currentViewer = viewer;
+Storage.saveAll();
+closeModal(‘viewer-modal’);
 renderDashboard();
+showToast(`Switched to ${viewer} view`);
 }
 
-/* ===================================
-ASSISTANT PAGE
-=================================== */
+// ===== MODAL SYSTEM =====
 
-function initAssistant() {
-const input = document.getElementById(‘terminal-input’);
-const clearBtn = document.getElementById(‘clear-terminal’);
+function openModal(modalId) {
+const modal = document.getElementById(modalId);
+const overlay = document.getElementById(‘modal-overlay’);
+if (modal && overlay) {
+modal.classList.add(‘active’);
+overlay.classList.add(‘active’);
+}
+}
 
-```
-input.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        const command = input.value.trim();
-        if (command) {
-            processCommand(command);
-            input.value = '';
-        }
-    }
+function closeModal(modalId) {
+const modal = document.getElementById(modalId);
+const overlay = document.getElementById(‘modal-overlay’);
+if (modal && overlay) {
+modal.classList.remove(‘active’);
+overlay.classList.remove(‘active’);
+}
+}
+
+// Close modals on overlay click
+document.addEventListener(‘click’, (e) => {
+if (e.target.id === ‘modal-overlay’) {
+document.querySelectorAll(’.modal.active’).forEach(modal => {
+modal.classList.remove(‘active’);
+});
+document.getElementById(‘modal-overlay’).classList.remove(‘active’);
+}
 });
 
-clearBtn.addEventListener('click', () => {
-    const output = document.getElementById('terminal-output');
-    output.innerHTML = `
-        <div class="terminal-line system">
-            <span class="prompt">system:</span>
-            <span>Life Dashboard Assistant v1.0</span>
-        </div>
-        <div class="terminal-line system">
-            <span class="prompt">system:</span>
-            <span>Type 'help' for available commands</span>
-        </div>
-    `;
+// Close modals on Escape key
+document.addEventListener(‘keydown’, (e) => {
+if (e.key === ‘Escape’) {
+document.querySelectorAll(’.modal.active’).forEach(modal => {
+modal.classList.remove(‘active’);
 });
-```
-
+document.getElementById(‘modal-overlay’).classList.remove(‘active’);
 }
-
-function processCommand(command) {
-addTerminalLine(‘user’, command);
-
-```
-const cmd = command.toLowerCase().trim();
-
-// Command routing
-if (cmd === 'help') {
-    showHelp();
-} else if (cmd === 'status') {
-    showStatus();
-} else if (cmd.startsWith('tasks')) {
-    showTasks(cmd);
-} else if (cmd === 'budget') {
-    showBudgetSummary();
-} else if (cmd === 'meals') {
-    showMeals();
-} else if (cmd === 'clear') {
-    document.getElementById('clear-terminal').click();
-} else {
-    addTerminalLine('response', `Unknown command: "${command}". Type 'help' for available commands.`);
-}
-
-scrollTerminalToBottom();
-```
-
-}
-
-function addTerminalLine(type, content) {
-const output = document.getElementById(‘terminal-output’);
-const line = document.createElement(‘div’);
-line.className = `terminal-line ${type}`;
-
-```
-if (type === 'user') {
-    line.innerHTML = `<span class="prompt">you:</span><span>${content}</span>`;
-} else if (type === 'response') {
-    line.innerHTML = `<span class="prompt">assistant:</span><span>${content}</span>`;
-} else if (type === 'system') {
-    line.innerHTML = `<span class="prompt">system:</span><span>${content}</span>`;
-} else if (type === 'error') {
-    line.innerHTML = `<span class="prompt">error:</span><span>${content}</span>`;
-}
-
-output.appendChild(line);
-```
-
-}
-
-function scrollTerminalToBottom() {
-const output = document.getElementById(‘terminal-output’);
-output.scrollTop = output.scrollHeight;
-}
-
-function showHelp() {
-addTerminalLine(‘response’, ‘Available commands:’);
-addTerminalLine(‘system’, ’  help - Show this help message’);
-addTerminalLine(‘system’, ’  status - Show dashboard overview’);
-addTerminalLine(‘system’, ’  tasks [filter] - Show tasks (all/today/overdue)’);
-addTerminalLine(‘system’, ’  budget - Show budget summary’);
-addTerminalLine(‘system’, ’  meals - Show meal plan’);
-addTerminalLine(‘system’, ’  clear - Clear terminal’);
-}
-
-function showStatus() {
-const taskCount = AppState.tasks.filter(t => !t.completed).length;
-const overdueCount = AppState.tasks.filter(t => {
-if (t.completed) return false;
-const dueDate = new Date(t.dueDate);
-const today = new Date();
-today.setHours(0, 0, 0, 0);
-return dueDate < today;
-}).length;
-
-```
-const totals = calculateBudgetTotals();
-const mealCount = AppState.meals.saved.length;
-
-addTerminalLine('response', '─── Dashboard Status ───');
-addTerminalLine('system', `Tasks: ${taskCount} active, ${overdueCount} overdue`);
-addTerminalLine('system', `Budget: ${formatCurrency(totals.remaining)} remaining`);
-addTerminalLine('system', `Meals: ${mealCount} planned`);
-```
-
-}
-
-function showTasks(cmd) {
-const parts = cmd.split(’ ’);
-const filter = parts[1] || ‘all’;
-
-```
-let tasks = [...AppState.tasks];
-const today = new Date();
-today.setHours(0, 0, 0, 0);
-
-if (filter === 'today') {
-    tasks = tasks.filter(t => {
-        const taskDate = new Date(t.dueDate);
-        taskDate.setHours(0, 0, 0, 0);
-        return taskDate.getTime() === today.getTime();
-    });
-} else if (filter === 'overdue') {
-    tasks = tasks.filter(t => {
-        const taskDate = new Date(t.dueDate);
-        return taskDate < today && !t.completed;
-    });
-}
-
-tasks = tasks.filter(t => !t.completed);
-
-if (tasks.length === 0) {
-    addTerminalLine('response', `No ${filter} tasks found`);
-    return;
-}
-
-addTerminalLine('response', `─── ${filter.toUpperCase()} Tasks (${tasks.length}) ───`);
-tasks.forEach(task => {
-    const dueDate = new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    addTerminalLine('system', `[${task.priority.toUpperCase()}] ${task.name} - Due: ${dueDate}`);
 });
+
+// ===== UTILITY FUNCTIONS =====
+
+function formatCurrency(amount) {
+return new Intl.NumberFormat(‘en-US’, {
+style: ‘currency’,
+currency: ‘USD’,
+minimumFractionDigits: 0,
+maximumFractionDigits: 0
+}).format(amount);
+}
+
+function formatDate(date) {
+const now = new Date();
+const diff = now - date;
+const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+```
+if (days === 0) return 'Today';
+if (days === 1) return 'Yesterday';
+if (days === -1) return 'Tomorrow';
+if (days < 7 && days > 0) return `${days} days ago`;
+if (days > -7 && days < 0) return `In ${-days} days`;
+
+return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 ```
 
 }
 
-function showBudgetSummary() {
-const totals = calculateBudgetTotals();
+function showToast(message, type = ‘success’) {
+const toast = document.createElement(‘div’);
+toast.style.cssText = `position: fixed; bottom: 2rem; right: 2rem; background: var(--bg-elevated); border: 1px solid ${type === 'error' ? 'var(--ruby)' : 'var(--gold)'}; color: var(--text-primary); padding: 1rem 1.5rem; border-radius: 8px; box-shadow: var(--shadow-xl); z-index: 10000; animation: slideInRight 0.3s ease;`;
+toast.textContent = message;
 
 ```
-addTerminalLine('response', '─── Budget Summary ───');
-addTerminalLine('system', `Income: ${formatCurrency(totals.income)}`);
-addTerminalLine('system', `Expenses: ${formatCurrency(totals.expenses)}`);
-addTerminalLine('system', `Remaining: ${formatCurrency(totals.remaining)}`);
-```
-
-}
-
-function showMeals() {
-const meals = AppState.meals.saved;
-
-```
-if (meals.length === 0) {
-    addTerminalLine('response', 'No meals planned');
-    return;
-}
-
-addTerminalLine('response', `─── Meal Plan (${meals.length}) ───`);
-meals.forEach(meal => {
-    addTerminalLine('system', `${meal.name} - ${meal.time} minutes`);
-});
-```
-
-}
-
-/* ===================================
-UTILITY FUNCTIONS
-=================================== */
-
-function showNotification(message) {
-// Simple notification - could be enhanced with a proper notification UI
-const notification = document.createElement(‘div’);
-notification.style.cssText = `position: fixed; top: 80px; right: 20px; background: var(--bg-elevated); border: 1px solid var(--accent-emerald); color: var(--accent-emerald); padding: var(--spacing-md) var(--spacing-lg); border-radius: 8px; box-shadow: var(--glow-emerald); z-index: 1001; animation: slideIn 0.3s ease;`;
-notification.textContent = message;
-
-```
-document.body.appendChild(notification);
+document.body.appendChild(toast);
 
 setTimeout(() => {
-    notification.style.animation = 'slideOut 0.3s ease';
-    setTimeout(() => notification.remove(), 300);
+    toast.style.animation = 'slideOutRight 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
 }, 3000);
 ```
 
 }
 
-// Add slide animations
-const style = document.createElement(‘style’);
-style.textContent = `@keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } } @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(400px); opacity: 0; } }`;
-document.head.appendChild(style);
-
-/* ===================================
-INITIALIZATION
-=================================== */
-
-document.addEventListener(‘DOMContentLoaded’, () => {
-// Load saved state from LocalStorage
-Storage.loadState();
+// Toast animations
+const toastStyles = document.createElement(‘style’);
+toastStyles.textContent = `
+@keyframes slideInRight {
+from {
+transform: translateX(400px);
+opacity: 0;
+}
+to {
+transform: translateX(0);
+opacity: 1;
+}
+}
 
 ```
-// Initialize all modules
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+```
+
+`;
+document.head.appendChild(toastStyles);
+
+// ===== DEMO DATA =====
+
+function loadDemoData() {
+if (LifeOS.data.tasks.length === 0) {
+LifeOS.data.tasks = [
+{
+id: 1,
+name: ‘Review Q1 financial report’,
+dueDate: new Date().toISOString().split(‘T’)[0],
+priority: ‘high’,
+category: ‘Work’,
+assignee: ‘me’,
+notes: ‘Prepare notes for board meeting’,
+completed: false,
+createdAt: new Date().toISOString()
+},
+{
+id: 2,
+name: ‘Grocery shopping’,
+dueDate: new Date(Date.now() + 86400000).toISOString().split(‘T’)[0],
+priority: ‘medium’,
+category: ‘Personal’,
+assignee: ‘household’,
+notes: ‘’,
+completed: false,
+createdAt: new Date().toISOString()
+},
+{
+id: 3,
+name: ‘Schedule dentist appointment’,
+dueDate: new Date(Date.now() + 172800000).toISOString().split(‘T’)[0],
+priority: ‘low’,
+category: ‘Health’,
+assignee: ‘me’,
+notes: ‘’,
+completed: false,
+createdAt: new Date().toISOString()
+}
+];
+}
+
+```
+if (LifeOS.data.budget.transactions.length === 0) {
+    LifeOS.data.budget.transactions = [
+        {
+            id: 1,
+            description: 'Monthly Salary',
+            amount: 5000,
+            type: 'income',
+            category: 'Income',
+            date: new Date().toISOString()
+        },
+        {
+            id: 2,
+            description: 'Rent Payment',
+            amount: 1500,
+            type: 'expense',
+            category: 'Utilities',
+            date: new Date().toISOString()
+        },
+        {
+            id: 3,
+            description: 'Groceries',
+            amount: 250,
+            type: 'expense',
+            category: 'Food',
+            date: new Date().toISOString()
+        }
+    ];
+}
+
+Storage.saveAll();
+```
+
+}
+
+// ===== INITIALIZATION =====
+
+document.addEventListener(‘DOMContentLoaded’, () => {
+// Show loading screen
+const loadingScreen = document.getElementById(‘loading-screen’);
+
+```
+// Load data from storage
+Storage.loadAll();
+
+// Load demo data if empty
+loadDemoData();
+
+// Initialize navigation
 initNavigation();
-initDashboard();
-initBudget();
-initTasks();
-initMeals();
-initAssistant();
 
-// Render initial page
+// Add SVG gradient for budget ring
+const svg = document.querySelector('.budget-ring');
+if (svg) {
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+    gradient.setAttribute('id', 'budgetGradient');
+    gradient.setAttribute('x1', '0%');
+    gradient.setAttribute('y1', '0%');
+    gradient.setAttribute('x2', '100%');
+    gradient.setAttribute('y2', '0%');
+    gradient.innerHTML = `
+        <stop offset="0%" style="stop-color: var(--gold); stop-opacity: 1" />
+        <stop offset="100%" style="stop-color: var(--gold-light); stop-opacity: 1" />
+    `;
+    defs.appendChild(gradient);
+    svg.insertBefore(defs, svg.firstChild);
+}
+
+// Initial render
 renderDashboard();
-renderSavedMeals();
 
-// Auto-save on page unload
+// Hide loading screen
+setTimeout(() => {
+    if (loadingScreen) {
+        loadingScreen.classList.add('hidden');
+    }
+}, 800);
+
+// Auto-save every 30 seconds
+setInterval(() => {
+    Storage.saveAll();
+}, 30000);
+
+// Save on page unload
 window.addEventListener('beforeunload', () => {
-    Storage.saveState();
+    Storage.saveAll();
 });
 
-console.log('Life Dashboard initialized');
+console.log('Life OS v' + LifeOS.version + ' initialized');
 ```
 
 });

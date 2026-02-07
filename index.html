@@ -4,359 +4,743 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Life Dashboard</title>
+    <title>Life OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="nav">
-        <div class="nav-brand">Life Dashboard</div>
-        <div class="nav-links">
-            <a href="#" data-page="dashboard" class="nav-link active">Dashboard</a>
-            <a href="#" data-page="budget" class="nav-link">Budget</a>
-            <a href="#" data-page="tasks" class="nav-link">Tasks</a>
-            <a href="#" data-page="meals" class="nav-link">Meals</a>
-            <a href="#" data-page="assistant" class="nav-link">Assistant</a>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">Life OS</div>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
         </div>
-    </nav>
+    </div>
 
 ```
-<!-- Main Container -->
-<main class="container">
+<!-- Sidebar Navigation -->
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <h1 class="brand">Life OS</h1>
+        <p class="brand-tagline">Your command center</p>
+    </div>
     
-    <!-- DASHBOARD PAGE -->
-    <div id="dashboard-page" class="page active">
-        <!-- Viewer Controls -->
-        <div class="controls-bar">
-            <div class="viewer-selector">
-                <button class="viewer-btn active" data-viewer="me">Me</button>
-                <button class="viewer-btn" data-viewer="partner">Partner</button>
-                <button class="viewer-btn" data-viewer="household">Household</button>
-                <button class="viewer-btn" data-viewer="all">All</button>
+    <nav class="sidebar-nav">
+        <a href="#" data-page="command" class="nav-item active">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <line x1="3" y1="9" x2="21" y2="9"/>
+                <line x1="9" y1="21" x2="9" y2="9"/>
+            </svg>
+            <span>Command Center</span>
+        </a>
+        <a href="#" data-page="calendar" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span>Calendar</span>
+        </a>
+        <a href="#" data-page="tasks" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 11 12 14 22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            <span>Tasks</span>
+        </a>
+        <a href="#" data-page="budget" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            <span>Budget</span>
+        </a>
+        <a href="#" data-page="health" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+            <span>Health</span>
+        </a>
+        <a href="#" data-page="notes" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <span>Notes</span>
+        </a>
+        <a href="#" data-page="meals" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+                <line x1="6" y1="1" x2="6" y2="4"/>
+                <line x1="10" y1="1" x2="10" y2="4"/>
+                <line x1="14" y1="1" x2="14" y2="4"/>
+            </svg>
+            <span>Meal Planner</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="profile-section">
+            <div class="profile-avatar">
+                <div class="avatar-placeholder">M</div>
             </div>
-            <div class="time-toggle">
-                <button class="time-btn active" data-time="today">Today</button>
-                <button class="time-btn" data-time="week">Week</button>
+            <div class="profile-info">
+                <div class="profile-name">My Workspace</div>
+                <button class="profile-switch" onclick="showViewerModal()">Switch view</button>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<!-- Main Content Area -->
+<main class="main-content">
+    
+    <!-- COMMAND CENTER PAGE -->
+    <section id="command-page" class="page active">
+        <header class="page-header">
+            <div class="header-content">
+                <h2 class="page-title">Command Center</h2>
+                <p class="page-subtitle" id="current-date"></p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" onclick="refreshDashboard()" title="Refresh">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card" data-stat="tasks">
+                <div class="stat-icon tasks">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 11 12 14 22 4"/>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="stat-tasks">0</div>
+                    <div class="stat-label">Active Tasks</div>
+                </div>
+            </div>
+            
+            <div class="stat-card" data-stat="budget">
+                <div class="stat-icon budget">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="1" x2="12" y2="23"/>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="stat-budget">$0</div>
+                    <div class="stat-label">Remaining This Month</div>
+                </div>
+            </div>
+            
+            <div class="stat-card" data-stat="health">
+                <div class="stat-icon health">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="stat-health">—</div>
+                    <div class="stat-label">Wellness Score</div>
+                </div>
+            </div>
+            
+            <div class="stat-card" data-stat="meals">
+                <div class="stat-icon meals">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+                        <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="stat-meals">0</div>
+                    <div class="stat-label">Meals Planned</div>
+                </div>
             </div>
         </div>
 
-        <!-- Alert Banner -->
-        <div id="alert-banner" class="alert-banner hidden"></div>
-
-        <!-- Dashboard Grid -->
+        <!-- Main Dashboard Grid -->
         <div class="dashboard-grid">
-            <!-- Schedule Card -->
-            <div class="card">
+            <!-- Today's Focus -->
+            <div class="glass-card priority-card">
                 <div class="card-header">
-                    <h2>Schedule</h2>
-                    <span class="card-badge" id="schedule-count">0</span>
+                    <h3>Today's Focus</h3>
                 </div>
-                <div class="card-content" id="schedule-content">
-                    <p class="empty-state">No events scheduled</p>
-                </div>
-            </div>
-
-            <!-- Tasks Card -->
-            <div class="card">
-                <div class="card-header">
-                    <h2>Tasks</h2>
-                    <span class="card-badge" id="tasks-count">0</span>
-                </div>
-                <div class="card-content" id="tasks-content">
-                    <p class="empty-state">No tasks due</p>
-                </div>
-            </div>
-
-            <!-- Budget Card -->
-            <div class="card">
-                <div class="card-header">
-                    <h2>Budget</h2>
-                    <span class="card-badge" id="budget-status">—</span>
-                </div>
-                <div class="card-content" id="budget-content">
-                    <div class="budget-overview">
-                        <div class="budget-row">
-                            <span>Income</span>
-                            <span id="budget-income">$0</span>
-                        </div>
-                        <div class="budget-row">
-                            <span>Expenses</span>
-                            <span id="budget-expenses">$0</span>
-                        </div>
-                        <div class="budget-row highlight">
-                            <span>Remaining</span>
-                            <span id="budget-remaining">$0</span>
-                        </div>
+                <div class="card-content" id="today-focus">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <p>Set your top priority for today</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Meals Card -->
-            <div class="card">
+            <!-- Quick Tasks -->
+            <div class="glass-card">
                 <div class="card-header">
-                    <h2>Meals</h2>
-                    <span class="card-badge" id="meals-count">0</span>
+                    <h3>Due Soon</h3>
+                    <a href="#" onclick="navigateTo('tasks')" class="card-link">View all</a>
                 </div>
-                <div class="card-content" id="meals-content">
-                    <p class="empty-state">No meals planned</p>
+                <div class="card-content">
+                    <div id="quick-tasks" class="task-list-compact"></div>
                 </div>
             </div>
 
-            <!-- Priority Card -->
-            <div class="card card-priority">
+            <!-- Budget Overview -->
+            <div class="glass-card">
                 <div class="card-header">
-                    <h2>Top Priority</h2>
+                    <h3>Budget Snapshot</h3>
+                    <a href="#" onclick="navigateTo('budget')" class="card-link">Manage</a>
                 </div>
-                <div class="card-content" id="priority-content">
-                    <p class="empty-state">No priorities set</p>
+                <div class="card-content">
+                    <div class="budget-snapshot">
+                        <div class="budget-visual">
+                            <svg class="budget-ring" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="40" class="ring-bg"/>
+                                <circle cx="50" cy="50" r="40" class="ring-progress" id="budget-ring"/>
+                            </svg>
+                            <div class="budget-center">
+                                <div class="budget-percentage" id="budget-percent">0%</div>
+                                <div class="budget-label">spent</div>
+                            </div>
+                        </div>
+                        <div class="budget-details" id="budget-snapshot-details"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Week Overview -->
+            <div class="glass-card week-card">
+                <div class="card-header">
+                    <h3>This Week</h3>
+                </div>
+                <div class="card-content">
+                    <div class="week-grid" id="week-overview"></div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="glass-card actions-card">
+                <div class="card-header">
+                    <h3>Quick Actions</h3>
+                </div>
+                <div class="card-content">
+                    <div class="quick-actions">
+                        <button class="action-btn" onclick="openQuickTask()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Add Task
+                        </button>
+                        <button class="action-btn" onclick="openQuickNote()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 20h9"/>
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                            </svg>
+                            Quick Note
+                        </button>
+                        <button class="action-btn" onclick="navigateTo('budget')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                            </svg>
+                            Log Expense
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meal Preview -->
+            <div class="glass-card">
+                <div class="card-header">
+                    <h3>Today's Meals</h3>
+                    <a href="#" onclick="navigateTo('meals')" class="card-link">Plan</a>
+                </div>
+                <div class="card-content" id="today-meals">
+                    <div class="empty-state-inline">No meals planned</div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- BUDGET PAGE -->
-    <div id="budget-page" class="page">
-        <div class="page-header">
-            <h1>Budget Manager</h1>
-            <button class="btn-primary" id="save-budget">Save Budget</button>
-        </div>
+    <!-- CALENDAR PAGE -->
+    <section id="calendar-page" class="page">
+        <header class="page-header">
+            <div class="header-content">
+                <h2 class="page-title">Calendar</h2>
+                <p class="page-subtitle">Manage your time</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-primary" onclick="openEventModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    New Event
+                </button>
+            </div>
+        </header>
 
-        <div class="budget-layout">
-            <!-- Income Section -->
-            <div class="card">
-                <div class="card-header">
-                    <h2>Income</h2>
-                    <button class="btn-secondary" id="add-income">+ Add Source</button>
-                </div>
-                <div class="card-content">
-                    <div id="income-list" class="budget-list"></div>
-                    <div class="budget-total">
-                        <span>Total Income</span>
-                        <span id="total-income">$0.00</span>
-                    </div>
+        <div class="calendar-layout">
+            <div class="calendar-sidebar">
+                <div class="mini-calendar" id="mini-calendar"></div>
+                <div class="calendar-filters">
+                    <h4>Calendars</h4>
+                    <label class="checkbox-label">
+                        <input type="checkbox" checked onchange="filterCalendar('personal')">
+                        <span class="checkbox-custom"></span>
+                        <span>Personal</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" checked onchange="filterCalendar('work')">
+                        <span class="checkbox-custom"></span>
+                        <span>Work</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" checked onchange="filterCalendar('household')">
+                        <span class="checkbox-custom"></span>
+                        <span>Household</span>
+                    </label>
                 </div>
             </div>
-
-            <!-- Fixed Expenses -->
-            <div class="card">
-                <div class="card-header">
-                    <h2>Fixed Expenses</h2>
-                    <button class="btn-secondary" id="add-fixed-expense">+ Add Expense</button>
+            <div class="calendar-main">
+                <div class="calendar-header">
+                    <button class="btn-icon" onclick="changeMonth(-1)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"/>
+                        </svg>
+                    </button>
+                    <h3 id="calendar-month-year"></h3>
+                    <button class="btn-icon" onclick="changeMonth(1)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                    </button>
                 </div>
-                <div class="card-content">
-                    <div id="fixed-expenses-list" class="budget-list"></div>
-                    <div class="budget-total">
-                        <span>Total Fixed</span>
-                        <span id="total-fixed">$0.00</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Variable Expenses -->
-            <div class="card">
-                <div class="card-header">
-                    <h2>Variable Expenses</h2>
-                    <button class="btn-secondary" id="add-variable-expense">+ Add Expense</button>
-                </div>
-                <div class="card-content">
-                    <div id="variable-expenses-list" class="budget-list"></div>
-                    <div class="budget-total">
-                        <span>Total Variable</span>
-                        <span id="total-variable">$0.00</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Summary -->
-            <div class="card card-summary">
-                <div class="card-header">
-                    <h2>Summary</h2>
-                </div>
-                <div class="card-content">
-                    <div class="summary-row">
-                        <span>Total Income</span>
-                        <span id="summary-income">$0.00</span>
-                    </div>
-                    <div class="summary-row">
-                        <span>Total Expenses</span>
-                        <span id="summary-expenses">$0.00</span>
-                    </div>
-                    <div class="summary-row highlight">
-                        <span>Remaining</span>
-                        <span id="summary-remaining">$0.00</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="budget-progress"></div>
-                    </div>
-                </div>
+                <div class="calendar-grid" id="calendar-grid"></div>
             </div>
         </div>
-    </div>
+    </section>
 
     <!-- TASKS PAGE -->
-    <div id="tasks-page" class="page">
-        <div class="page-header">
-            <h1>Task Manager</h1>
-            <button class="btn-primary" id="add-task">+ New Task</button>
-        </div>
+    <section id="tasks-page" class="page">
+        <header class="page-header">
+            <div class="header-content">
+                <h2 class="page-title">Tasks</h2>
+                <p class="page-subtitle">Stay organized and productive</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-primary" onclick="openTaskModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    New Task
+                </button>
+            </div>
+        </header>
 
-        <!-- Task Filters -->
-        <div class="task-filters">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="today">Today</button>
-            <button class="filter-btn" data-filter="upcoming">Upcoming</button>
-            <button class="filter-btn" data-filter="overdue">Overdue</button>
-        </div>
+        <div class="tasks-layout">
+            <div class="tasks-sidebar">
+                <div class="task-views">
+                    <button class="view-btn active" data-view="all" onclick="changeTaskView('all')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="8" y1="6" x2="21" y2="6"/>
+                            <line x1="8" y1="12" x2="21" y2="12"/>
+                            <line x1="8" y1="18" x2="21" y2="18"/>
+                            <line x1="3" y1="6" x2="3.01" y2="6"/>
+                            <line x1="3" y1="12" x2="3.01" y2="12"/>
+                            <line x1="3" y1="18" x2="3.01" y2="18"/>
+                        </svg>
+                        All Tasks
+                    </button>
+                    <button class="view-btn" data-view="today" onclick="changeTaskView('today')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        Today
+                    </button>
+                    <button class="view-btn" data-view="upcoming" onclick="changeTaskView('upcoming')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        Upcoming
+                    </button>
+                    <button class="view-btn" data-view="completed" onclick="changeTaskView('completed')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Completed
+                    </button>
+                </div>
 
-        <!-- Task List -->
-        <div class="card">
-            <div class="card-content">
-                <div id="task-list" class="task-list"></div>
+                <div class="task-filters">
+                    <h4>Filter by</h4>
+                    <select class="filter-select" onchange="filterTasksByPriority(this.value)">
+                        <option value="all">All Priorities</option>
+                        <option value="critical">Critical</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                    <select class="filter-select" onchange="filterTasksByAssignee(this.value)">
+                        <option value="all">All Assignees</option>
+                        <option value="me">Me</option>
+                        <option value="partner">Partner</option>
+                        <option value="household">Household</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="tasks-main">
+                <div class="tasks-container" id="tasks-container"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BUDGET PAGE -->
+    <section id="budget-page" class="page">
+        <header class="page-header">
+            <div class="header-content">
+                <h2 class="page-title">Budget Manager</h2>
+                <p class="page-subtitle">Track income and expenses</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-secondary" onclick="exportBudgetData()">Export</button>
+                <button class="btn-primary" onclick="openTransactionModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Add Transaction
+                </button>
+            </div>
+        </header>
+
+        <div class="budget-overview-grid">
+            <div class="glass-card budget-summary-card">
+                <h3>Monthly Summary</h3>
+                <div class="summary-stats">
+                    <div class="summary-item income">
+                        <div class="summary-label">Total Income</div>
+                        <div class="summary-value" id="total-income">$0.00</div>
+                    </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-item expense">
+                        <div class="summary-label">Total Expenses</div>
+                        <div class="summary-value" id="total-expenses">$0.00</div>
+                    </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-item balance">
+                        <div class="summary-label">Net Balance</div>
+                        <div class="summary-value" id="net-balance">$0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h3>Spending by Category</h3>
+                <div class="category-breakdown" id="category-breakdown"></div>
+            </div>
+
+            <div class="glass-card">
+                <h3>Savings Rate</h3>
+                <div class="savings-visualization">
+                    <div class="savings-chart">
+                        <div class="savings-bar">
+                            <div class="savings-fill" id="savings-fill"></div>
+                        </div>
+                        <div class="savings-percentage" id="savings-percentage">0%</div>
+                    </div>
+                    <p class="savings-label">of income saved this month</p>
+                </div>
             </div>
         </div>
 
-        <!-- Task Modal -->
-        <div id="task-modal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="modal-title">New Task</h2>
-                    <button class="modal-close">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>Task Name</label>
-                        <input type="text" id="task-name" placeholder="Enter task name">
-                    </div>
-                    <div class="form-group">
-                        <label>Due Date</label>
-                        <input type="date" id="task-date">
-                    </div>
-                    <div class="form-group">
-                        <label>Priority</label>
-                        <select id="task-priority">
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Category</label>
-                        <input type="text" id="task-category" placeholder="e.g., Work, Personal">
-                    </div>
-                    <div class="form-group">
-                        <label>Assignee</label>
-                        <select id="task-assignee">
-                            <option value="me">Me</option>
-                            <option value="partner">Partner</option>
-                            <option value="household">Household</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn-secondary modal-cancel">Cancel</button>
-                    <button class="btn-primary" id="save-task">Save Task</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MEALS PAGE -->
-    <div id="meals-page" class="page">
-        <div class="page-header">
-            <h1>Meal Planner</h1>
-        </div>
-
-        <div class="meals-layout">
-            <!-- Input Section -->
-            <div class="card">
+        <div class="budget-tables">
+            <div class="glass-card">
                 <div class="card-header">
-                    <h2>What do you have?</h2>
-                </div>
-                <div class="card-content">
-                    <div class="form-group">
-                        <label>Ingredients</label>
-                        <textarea id="ingredients-input" rows="4" placeholder="e.g., chicken, rice, tomatoes, onions"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Time Available</label>
-                        <select id="time-available">
-                            <option value="15">15 minutes</option>
-                            <option value="30">30 minutes</option>
-                            <option value="45">45 minutes</option>
-                            <option value="60">1 hour</option>
-                            <option value="90">1.5 hours</option>
+                    <h3>Recent Transactions</h3>
+                    <div class="header-actions">
+                        <select class="filter-select" onchange="filterTransactions(this.value)">
+                            <option value="all">All Transactions</option>
+                            <option value="income">Income Only</option>
+                            <option value="expense">Expenses Only</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label>Vibe</label>
-                        <div class="vibe-selector">
-                            <button class="vibe-btn" data-vibe="quick">Quick & Easy</button>
-                            <button class="vibe-btn" data-vibe="comfort">Comfort Food</button>
-                            <button class="vibe-btn" data-vibe="healthy">Healthy</button>
-                            <button class="vibe-btn" data-vibe="fancy">Fancy</button>
+                </div>
+                <div class="transactions-list" id="transactions-list"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HEALTH PAGE -->
+    <section id="health-page" class="page">
+        <header class="page-header">
+            <div class="header-content">
+                <h2 class="page-title">Health & Wellness</h2>
+                <p class="page-subtitle">Track your wellbeing</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-primary" onclick="logHealthData()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Log Entry
+                </button>
+            </div>
+        </header>
+
+        <div class="health-grid">
+            <div class="glass-card">
+                <h3>Today's Activity</h3>
+                <div class="health-metrics">
+                    <div class="metric">
+                        <div class="metric-icon">🏃</div>
+                        <div class="metric-data">
+                            <div class="metric-value" id="steps-today">0</div>
+                            <div class="metric-label">steps</div>
                         </div>
                     </div>
-                    <button class="btn-primary" id="suggest-meals">Suggest Meals</button>
-                </div>
-            </div>
-
-            <!-- Suggestions Section -->
-            <div class="card">
-                <div class="card-header">
-                    <h2>Suggested Meals</h2>
-                </div>
-                <div class="card-content">
-                    <div id="meal-suggestions">
-                        <p class="empty-state">Enter ingredients and preferences to see suggestions</p>
+                    <div class="metric">
+                        <div class="metric-icon">💧</div>
+                        <div class="metric-data">
+                            <div class="metric-value" id="water-today">0</div>
+                            <div class="metric-label">glasses</div>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-icon">😴</div>
+                        <div class="metric-data">
+                            <div class="metric-value" id="sleep-today">0h</div>
+                            <div class="metric-label">sleep</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Saved Meals -->
-            <div class="card">
-                <div class="card-header">
-                    <h2>This Week's Plan</h2>
+            <div class="glass-card">
+                <h3>Weekly Trends</h3>
+                <div class="trend-chart" id="health-trend-chart">
+                    <p class="empty-state-inline">Start logging to see trends</p>
                 </div>
-                <div class="card-content">
-                    <div id="saved-meals">
-                        <p class="empty-state">No meals planned yet</p>
-                    </div>
+            </div>
+
+            <div class="glass-card">
+                <h3>Wellness Journal</h3>
+                <textarea class="wellness-journal" placeholder="How are you feeling today?" id="wellness-journal"></textarea>
+                <button class="btn-secondary" onclick="saveJournalEntry()">Save Entry</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- NOTES PAGE -->
+    <section id="notes-page" class="page">
+        <header class="page-header">
+            <div class="header-content">
+                <h2 class="page-title">Notes</h2>
+                <p class="page-subtitle">Capture your thoughts</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-primary" onclick="createNote()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    New Note
+                </button>
+            </div>
+        </header>
+
+        <div class="notes-layout">
+            <div class="notes-sidebar">
+                <div class="notes-search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text" placeholder="Search notes..." oninput="searchNotes(this.value)">
+                </div>
+                <div class="notes-list" id="notes-list"></div>
+            </div>
+            <div class="notes-editor" id="notes-editor">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                    <p>Select a note or create a new one</p>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- ASSISTANT PAGE -->
-    <div id="assistant-page" class="page">
-        <div class="page-header">
-            <h1>AI Assistant</h1>
-        </div>
+    <!-- MEALS PAGE -->
+    <section id="meals-page" class="page">
+        <header class="page-header">
+            <div class="header-content">
+                <h2 class="page-title">Meal Planner</h2>
+                <p class="page-subtitle">Plan your weekly meals</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-primary" onclick="generateMealPlan()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                    </svg>
+                    Generate Plan
+                </button>
+            </div>
+        </header>
 
-        <div class="terminal-container">
-            <div class="terminal">
-                <div class="terminal-header">
-                    <span class="terminal-title">assistant@lifedash:~$</span>
-                    <button class="btn-secondary" id="clear-terminal">Clear</button>
+        <div class="meals-grid">
+            <div class="glass-card meal-planner-card">
+                <h3>This Week's Plan</h3>
+                <div class="week-meal-grid" id="week-meal-grid"></div>
+            </div>
+
+            <div class="glass-card">
+                <h3>Quick Add</h3>
+                <div class="quick-meal-form">
+                    <input type="text" class="form-input" placeholder="Meal name" id="quick-meal-name">
+                    <select class="form-select" id="quick-meal-day">
+                        <option value="monday">Monday</option>
+                        <option value="tuesday">Tuesday</option>
+                        <option value="wednesday">Wednesday</option>
+                        <option value="thursday">Thursday</option>
+                        <option value="friday">Friday</option>
+                        <option value="saturday">Saturday</option>
+                        <option value="sunday">Sunday</option>
+                    </select>
+                    <select class="form-select" id="quick-meal-time">
+                        <option value="breakfast">Breakfast</option>
+                        <option value="lunch">Lunch</option>
+                        <option value="dinner">Dinner</option>
+                    </select>
+                    <button class="btn-secondary" onclick="addQuickMeal()">Add Meal</button>
                 </div>
-                <div class="terminal-output" id="terminal-output">
-                    <div class="terminal-line system">
-                        <span class="prompt">system:</span>
-                        <span>Life Dashboard Assistant v1.0</span>
-                    </div>
-                    <div class="terminal-line system">
-                        <span class="prompt">system:</span>
-                        <span>Type 'help' for available commands</span>
-                    </div>
-                </div>
-                <div class="terminal-input-wrapper">
-                    <span class="terminal-prompt">></span>
-                    <input type="text" id="terminal-input" class="terminal-input" placeholder="Enter command..." autocomplete="off">
+            </div>
+
+            <div class="glass-card">
+                <h3>Grocery List</h3>
+                <div class="grocery-list" id="grocery-list">
+                    <p class="empty-state-inline">Add meals to generate grocery list</p>
                 </div>
             </div>
         </div>
-    </div>
-
+    </section>
 </main>
+
+<!-- MODALS -->
+<div id="modal-overlay" class="modal-overlay"></div>
+
+<!-- Viewer Switch Modal -->
+<div id="viewer-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Switch View</h3>
+            <button class="btn-icon" onclick="closeModal('viewer-modal')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="viewer-options">
+                <button class="viewer-option active" onclick="switchViewer('me')">
+                    <div class="viewer-icon">👤</div>
+                    <div class="viewer-label">My View</div>
+                </button>
+                <button class="viewer-option" onclick="switchViewer('partner')">
+                    <div class="viewer-icon">💑</div>
+                    <div class="viewer-label">Partner View</div>
+                </button>
+                <button class="viewer-option" onclick="switchViewer('household')">
+                    <div class="viewer-icon">🏠</div>
+                    <div class="viewer-label">Household View</div>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Task Modal -->
+<div id="task-modal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h3 id="task-modal-title">New Task</h3>
+            <button class="btn-icon" onclick="closeModal('task-modal')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label>Task Name</label>
+                    <input type="text" class="form-input" id="task-name-input" placeholder="What needs to be done?">
+                </div>
+                <div class="form-group">
+                    <label>Due Date</label>
+                    <input type="date" class="form-input" id="task-date-input">
+                </div>
+                <div class="form-group">
+                    <label>Priority</label>
+                    <select class="form-select" id="task-priority-input">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <input type="text" class="form-input" id="task-category-input" placeholder="e.g., Work, Personal">
+                </div>
+                <div class="form-group">
+                    <label>Assignee</label>
+                    <select class="form-select" id="task-assignee-input">
+                        <option value="me">Me</option>
+                        <option value="partner">Partner</option>
+                        <option value="household">Household</option>
+                    </select>
+                </div>
+                <div class="form-group full-width">
+                    <label>Notes</label>
+                    <textarea class="form-textarea" id="task-notes-input" rows="3" placeholder="Add any additional details..."></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeModal('task-modal')">Cancel</button>
+            <button class="btn-primary" onclick="saveTask()">Save Task</button>
+        </div>
+    </div>
+</div>
 
 <script src="app.js"></script>
 ```
