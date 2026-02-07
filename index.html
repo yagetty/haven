@@ -4,83 +4,359 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jordy Life OS</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Life Dashboard</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-brand">Life Dashboard</div>
+        <div class="nav-links">
+            <a href="#" data-page="dashboard" class="nav-link active">Dashboard</a>
+            <a href="#" data-page="budget" class="nav-link">Budget</a>
+            <a href="#" data-page="tasks" class="nav-link">Tasks</a>
+            <a href="#" data-page="meals" class="nav-link">Meals</a>
+            <a href="#" data-page="assistant" class="nav-link">Assistant</a>
+        </div>
+    </nav>
 
 ```
-<!-- HEADER -->
-<div class="container header">
-    <div class="page-title" id="page-title">Dashboard</div>
-    <div class="header-actions" id="header-actions"></div>
-</div>
+<!-- Main Container -->
+<main class="container">
+    
+    <!-- DASHBOARD PAGE -->
+    <div id="dashboard-page" class="page active">
+        <!-- Viewer Controls -->
+        <div class="controls-bar">
+            <div class="viewer-selector">
+                <button class="viewer-btn active" data-viewer="me">Me</button>
+                <button class="viewer-btn" data-viewer="partner">Partner</button>
+                <button class="viewer-btn" data-viewer="household">Household</button>
+                <button class="viewer-btn" data-viewer="all">All</button>
+            </div>
+            <div class="time-toggle">
+                <button class="time-btn active" data-time="today">Today</button>
+                <button class="time-btn" data-time="week">Week</button>
+            </div>
+        </div>
 
-<!-- MAIN CONTENT AREA -->
-<div class="container" id="app">
-    <!-- Content injected by JS -->
-</div>
+        <!-- Alert Banner -->
+        <div id="alert-banner" class="alert-banner hidden"></div>
 
-<!-- NAVIGATION -->
-<div class="navbar">
-    <div class="nav-item active" onclick="router('home')" title="Dashboard">
-        <div class="nav-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                <polyline points="9 22 9 12 15 12 15 22"></polyline>
-            </svg>
-        </div>
-        <span class="nav-label">Home</span>
-    </div>
-    <div class="nav-item" onclick="router('habits')" title="Habits & Tasks">
-        <div class="nav-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="9 11 12 14 22 4"></polyline>
-                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-            </svg>
-        </div>
-        <span class="nav-label">Tasks</span>
-    </div>
-    <div class="nav-item" onclick="router('journal')" title="Journal">
-        <div class="nav-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-            </svg>
-        </div>
-        <span class="nav-label">Journal</span>
-    </div>
-    <div class="nav-item" onclick="router('goals')" title="Goals">
-        <div class="nav-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <circle cx="12" cy="12" r="6"></circle>
-                <circle cx="12" cy="12" r="2"></circle>
-            </svg>
-        </div>
-        <span class="nav-label">Goals</span>
-    </div>
-    <div class="nav-item" onclick="router('settings')" title="Settings">
-        <div class="nav-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M12 1v6m0 6v6m-9-9h6m6 0h6m-2.636-6.364l-4.243 4.243m0 6.122l4.243 4.243M6.637 6.637l4.243 4.243m0 6.122l-4.243 4.243"></path>
-            </svg>
-        </div>
-        <span class="nav-label">Settings</span>
-    </div>
-</div>
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Schedule Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Schedule</h2>
+                    <span class="card-badge" id="schedule-count">0</span>
+                </div>
+                <div class="card-content" id="schedule-content">
+                    <p class="empty-state">No events scheduled</p>
+                </div>
+            </div>
 
-<!-- Modal Container -->
-<div id="modal-container"></div>
+            <!-- Tasks Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Tasks</h2>
+                    <span class="card-badge" id="tasks-count">0</span>
+                </div>
+                <div class="card-content" id="tasks-content">
+                    <p class="empty-state">No tasks due</p>
+                </div>
+            </div>
 
-<!-- Background Effects -->
-<div class="grain-overlay"></div>
+            <!-- Budget Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Budget</h2>
+                    <span class="card-badge" id="budget-status">—</span>
+                </div>
+                <div class="card-content" id="budget-content">
+                    <div class="budget-overview">
+                        <div class="budget-row">
+                            <span>Income</span>
+                            <span id="budget-income">$0</span>
+                        </div>
+                        <div class="budget-row">
+                            <span>Expenses</span>
+                            <span id="budget-expenses">$0</span>
+                        </div>
+                        <div class="budget-row highlight">
+                            <span>Remaining</span>
+                            <span id="budget-remaining">$0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meals Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Meals</h2>
+                    <span class="card-badge" id="meals-count">0</span>
+                </div>
+                <div class="card-content" id="meals-content">
+                    <p class="empty-state">No meals planned</p>
+                </div>
+            </div>
+
+            <!-- Priority Card -->
+            <div class="card card-priority">
+                <div class="card-header">
+                    <h2>Top Priority</h2>
+                </div>
+                <div class="card-content" id="priority-content">
+                    <p class="empty-state">No priorities set</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BUDGET PAGE -->
+    <div id="budget-page" class="page">
+        <div class="page-header">
+            <h1>Budget Manager</h1>
+            <button class="btn-primary" id="save-budget">Save Budget</button>
+        </div>
+
+        <div class="budget-layout">
+            <!-- Income Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Income</h2>
+                    <button class="btn-secondary" id="add-income">+ Add Source</button>
+                </div>
+                <div class="card-content">
+                    <div id="income-list" class="budget-list"></div>
+                    <div class="budget-total">
+                        <span>Total Income</span>
+                        <span id="total-income">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fixed Expenses -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Fixed Expenses</h2>
+                    <button class="btn-secondary" id="add-fixed-expense">+ Add Expense</button>
+                </div>
+                <div class="card-content">
+                    <div id="fixed-expenses-list" class="budget-list"></div>
+                    <div class="budget-total">
+                        <span>Total Fixed</span>
+                        <span id="total-fixed">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variable Expenses -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Variable Expenses</h2>
+                    <button class="btn-secondary" id="add-variable-expense">+ Add Expense</button>
+                </div>
+                <div class="card-content">
+                    <div id="variable-expenses-list" class="budget-list"></div>
+                    <div class="budget-total">
+                        <span>Total Variable</span>
+                        <span id="total-variable">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="card card-summary">
+                <div class="card-header">
+                    <h2>Summary</h2>
+                </div>
+                <div class="card-content">
+                    <div class="summary-row">
+                        <span>Total Income</span>
+                        <span id="summary-income">$0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Total Expenses</span>
+                        <span id="summary-expenses">$0.00</span>
+                    </div>
+                    <div class="summary-row highlight">
+                        <span>Remaining</span>
+                        <span id="summary-remaining">$0.00</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="budget-progress"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TASKS PAGE -->
+    <div id="tasks-page" class="page">
+        <div class="page-header">
+            <h1>Task Manager</h1>
+            <button class="btn-primary" id="add-task">+ New Task</button>
+        </div>
+
+        <!-- Task Filters -->
+        <div class="task-filters">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="today">Today</button>
+            <button class="filter-btn" data-filter="upcoming">Upcoming</button>
+            <button class="filter-btn" data-filter="overdue">Overdue</button>
+        </div>
+
+        <!-- Task List -->
+        <div class="card">
+            <div class="card-content">
+                <div id="task-list" class="task-list"></div>
+            </div>
+        </div>
+
+        <!-- Task Modal -->
+        <div id="task-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modal-title">New Task</h2>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Task Name</label>
+                        <input type="text" id="task-name" placeholder="Enter task name">
+                    </div>
+                    <div class="form-group">
+                        <label>Due Date</label>
+                        <input type="date" id="task-date">
+                    </div>
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <select id="task-priority">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <input type="text" id="task-category" placeholder="e.g., Work, Personal">
+                    </div>
+                    <div class="form-group">
+                        <label>Assignee</label>
+                        <select id="task-assignee">
+                            <option value="me">Me</option>
+                            <option value="partner">Partner</option>
+                            <option value="household">Household</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary modal-cancel">Cancel</button>
+                    <button class="btn-primary" id="save-task">Save Task</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MEALS PAGE -->
+    <div id="meals-page" class="page">
+        <div class="page-header">
+            <h1>Meal Planner</h1>
+        </div>
+
+        <div class="meals-layout">
+            <!-- Input Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>What do you have?</h2>
+                </div>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label>Ingredients</label>
+                        <textarea id="ingredients-input" rows="4" placeholder="e.g., chicken, rice, tomatoes, onions"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Time Available</label>
+                        <select id="time-available">
+                            <option value="15">15 minutes</option>
+                            <option value="30">30 minutes</option>
+                            <option value="45">45 minutes</option>
+                            <option value="60">1 hour</option>
+                            <option value="90">1.5 hours</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Vibe</label>
+                        <div class="vibe-selector">
+                            <button class="vibe-btn" data-vibe="quick">Quick & Easy</button>
+                            <button class="vibe-btn" data-vibe="comfort">Comfort Food</button>
+                            <button class="vibe-btn" data-vibe="healthy">Healthy</button>
+                            <button class="vibe-btn" data-vibe="fancy">Fancy</button>
+                        </div>
+                    </div>
+                    <button class="btn-primary" id="suggest-meals">Suggest Meals</button>
+                </div>
+            </div>
+
+            <!-- Suggestions Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Suggested Meals</h2>
+                </div>
+                <div class="card-content">
+                    <div id="meal-suggestions">
+                        <p class="empty-state">Enter ingredients and preferences to see suggestions</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saved Meals -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>This Week's Plan</h2>
+                </div>
+                <div class="card-content">
+                    <div id="saved-meals">
+                        <p class="empty-state">No meals planned yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ASSISTANT PAGE -->
+    <div id="assistant-page" class="page">
+        <div class="page-header">
+            <h1>AI Assistant</h1>
+        </div>
+
+        <div class="terminal-container">
+            <div class="terminal">
+                <div class="terminal-header">
+                    <span class="terminal-title">assistant@lifedash:~$</span>
+                    <button class="btn-secondary" id="clear-terminal">Clear</button>
+                </div>
+                <div class="terminal-output" id="terminal-output">
+                    <div class="terminal-line system">
+                        <span class="prompt">system:</span>
+                        <span>Life Dashboard Assistant v1.0</span>
+                    </div>
+                    <div class="terminal-line system">
+                        <span class="prompt">system:</span>
+                        <span>Type 'help' for available commands</span>
+                    </div>
+                </div>
+                <div class="terminal-input-wrapper">
+                    <span class="terminal-prompt">></span>
+                    <input type="text" id="terminal-input" class="terminal-input" placeholder="Enter command..." autocomplete="off">
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
 
 <script src="app.js"></script>
 ```

@@ -1,956 +1,1115 @@
-// ========================================
-// JORDY LIFE OS - FINTECH EDITION
-// ========================================
+/* ===================================
+APPLICATION STATE & STORAGE
+=================================== */
 
-// — 1. STATE MANAGEMENT —
-const store = {
-tasks: [
-{
-id: 1,
-text: “Review Design Tokens”,
-done: false,
-category: “Work”,
-priority: “high”,
-dueDate: null,
-createdAt: new Date().toISOString()
+// Global state object
+const AppState = {
+currentPage: ‘dashboard’,
+currentViewer: ‘me’,
+currentTimeFrame: ‘today’,
+currentTaskFilter: ‘all’,
+selectedVibe: null,
+editingTask: null,
+
+```
+// Data structures
+budget: {
+    income: [],
+    fixedExpenses: [],
+    variableExpenses: []
 },
-{
-id: 2,
-text: “Morning Walk”,
-done: true,
-category: “Health”,
-priority: “medium”,
-dueDate: null,
-createdAt: new Date().toISOString()
+tasks: [],
+meals: {
+    saved: [],
+    suggestions: []
 }
-],
-journal: [
-{
-id: 1,
-date: “Oct 24”,
-text: “Feeling focused today. The new color palette looks calm.”,
-mood: “😊”,
-timestamp: new Date().toISOString()
-}
-],
-goals: [
-{
-id: 1,
-title: “Read 12 Books This Year”,
-description: “Focus on personal development and fiction”,
-current: 3,
-target: 12,
-category: “Personal”,
-deadline: “2026-12-31”
-}
-],
-categories: [“Work”, “Personal”, “Health”, “Learning”, “Finance”],
-settings: {
-theme: “fintech-dark”,
-weekStartsOn: “monday”,
-notifications: true
-},
-stats: {
-totalTasksCompleted: 0,
-currentStreak: 0,
-longestStreak: 0,
-journalEntries: 0
-},
-crypto: {
-bitcoin: { price: null, change24h: null, loading: true },
-solana: { price: null, change24h: null, loading: true }
-}
+```
+
 };
 
-// Load data from localStorage
-function loadData() {
-if(localStorage.getItem(‘havenData’)) {
-const saved = JSON.parse(localStorage.getItem(‘havenData’));
-store.tasks = saved.tasks || store.tasks;
-store.journal = saved.journal || store.journal;
-store.goals = saved.goals || store.goals;
-store.categories = saved.categories || store.categories;
-store.settings = saved.settings || store.settings;
-store.stats = saved.stats || store.stats;
-}
-}
-
-// Save data to localStorage
-function save() {
-localStorage.setItem(‘havenData’, JSON.stringify(store));
-}
-
-// — 2. CRYPTO PRICE FETCHING —
-
-async function fetchCryptoPrices() {
-try {
-// Using CoinGecko API (no API key required for basic usage)
-const response = await fetch(‘https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,solana&vs_currencies=usd&include_24hr_change=true’);
-const data = await response.json();
+// LocalStorage helpers
+const Storage = {
+save(key, data) {
+localStorage.setItem(key, JSON.stringify(data));
+},
 
 ```
-    if (data.bitcoin) {
-        store.crypto.bitcoin = {
-            price: data.bitcoin.usd,
-            change24h: data.bitcoin.usd_24h_change,
-            loading: false
-        };
-    }
-    
-    if (data.solana) {
-        store.crypto.solana = {
-            price: data.solana.usd,
-            change24h: data.solana.usd_24h_change,
-            loading: false
-        };
-    }
-    
-    // Update display if on home page
-    if (document.getElementById('crypto-bitcoin')) {
-        updateCryptoDisplay();
-    }
-} catch (error) {
-    console.error('Error fetching crypto prices:', error);
-    store.crypto.bitcoin.loading = false;
-    store.crypto.solana.loading = false;
+load(key, defaultValue = null) {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : defaultValue;
+},
+
+saveState() {
+    this.save('budget', AppState.budget);
+    this.save('tasks', AppState.tasks);
+    this.save('meals', AppState.meals);
+},
+
+loadState() {
+    AppState.budget = this.load('budget', AppState.budget);
+    AppState.tasks = this.load('tasks', AppState.tasks);
+    AppState.meals = this.load('meals', AppState.meals);
 }
 ```
 
-}
+};
 
-function updateCryptoDisplay() {
-// Update Bitcoin
-const btcCard = document.getElementById(‘crypto-bitcoin’);
-if (btcCard && !store.crypto.bitcoin.loading) {
-const priceEl = btcCard.querySelector(’.crypto-price’);
-const changeEl = btcCard.querySelector(’.crypto-change’);
+/* ===================================
+NAVIGATION & PAGE SWITCHING
+=================================== */
 
-```
-    priceEl.textContent = `$${store.crypto.bitcoin.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    priceEl.classList.remove('crypto-loading');
-    
-    const change = store.crypto.bitcoin.change24h;
-    changeEl.textContent = `${change >= 0 ? '▲' : '▼'} ${Math.abs(change).toFixed(2)}%`;
-    changeEl.className = `crypto-change ${change >= 0 ? 'positive' : 'negative'}`;
-}
-
-// Update Solana
-const solCard = document.getElementById('crypto-solana');
-if (solCard && !store.crypto.solana.loading) {
-    const priceEl = solCard.querySelector('.crypto-price');
-    const changeEl = solCard.querySelector('.crypto-change');
-    
-    priceEl.textContent = `$${store.crypto.solana.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    priceEl.classList.remove('crypto-loading');
-    
-    const change = store.crypto.solana.change24h;
-    changeEl.textContent = `${change >= 0 ? '▲' : '▼'} ${Math.abs(change).toFixed(2)}%`;
-    changeEl.className = `crypto-change ${change >= 0 ? 'positive' : 'negative'}`;
-}
-```
-
-}
-
-// Refresh crypto prices every 60 seconds
-setInterval(() => {
-if (window.location.hash === ‘’ || window.location.hash === ‘#home’) {
-fetchCryptoPrices();
-}
-}, 60000);
-
-// — 3. UTILITY FUNCTIONS —
-
-function formatDate(dateString) {
-const date = new Date(dateString);
-return date.toLocaleDateString(‘en-US’, { month: ‘short’, day: ‘numeric’ });
-}
-
-function formatDateLong(dateString) {
-const date = new Date(dateString);
-return date.toLocaleDateString(‘en-US’, {
-weekday: ‘long’,
-year: ‘numeric’,
-month: ‘long’,
-day: ‘numeric’
-});
-}
-
-function getGreeting() {
-const hour = new Date().getHours();
-if (hour < 12) return “Good Morning”;
-if (hour < 18) return “Good Afternoon”;
-return “Good Evening”;
-}
-
-function calculateStreak() {
-const today = new Date().toDateString();
-const completedToday = store.tasks.some(t =>
-t.done && new Date(t.createdAt).toDateString() === today
-);
-return completedToday ? store.stats.currentStreak : 0;
-}
-
-function getTaskStats() {
-const total = store.tasks.length;
-const done = store.tasks.filter(t => t.done).length;
-const pending = total - done;
-const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+function initNavigation() {
+const navLinks = document.querySelectorAll(’.nav-link’);
 
 ```
-const today = new Date().toDateString();
-const todayTasks = store.tasks.filter(t => {
-    if (!t.dueDate) return false;
-    return new Date(t.dueDate).toDateString() === today;
-});
-const todayDone = todayTasks.filter(t => t.done).length;
-
-return { total, done, pending, percent, todayTasks: todayTasks.length, todayDone };
-```
-
-}
-
-// — 4. RENDER FUNCTIONS —
-
-// Page: HOME / DASHBOARD
-function renderHome() {
-const app = document.getElementById(‘app’);
-document.getElementById(‘page-title’).innerText = getGreeting();
-document.getElementById(‘header-actions’).innerHTML = ‘’;
-
-```
-const stats = getTaskStats();
-const streak = calculateStreak();
-
-app.innerHTML = `
-    <!-- Crypto Prices -->
-    <div class="crypto-grid">
-        <div class="crypto-card" id="crypto-bitcoin">
-            <div class="crypto-header">
-                <div class="crypto-icon">₿</div>
-                <div class="crypto-name">
-                    <div class="crypto-symbol">BTC</div>
-                    <div class="crypto-title">Bitcoin</div>
-                </div>
-            </div>
-            <div class="crypto-price crypto-loading">Loading...</div>
-            <div class="crypto-change">--</div>
-        </div>
-        
-        <div class="crypto-card" id="crypto-solana">
-            <div class="crypto-header">
-                <div class="crypto-icon">◎</div>
-                <div class="crypto-name">
-                    <div class="crypto-symbol">SOL</div>
-                    <div class="crypto-title">Solana</div>
-                </div>
-            </div>
-            <div class="crypto-price crypto-loading">Loading...</div>
-            <div class="crypto-change">--</div>
-        </div>
-    </div>
-
-    <!-- Stats Overview -->
-    <div class="card card-gradient">
-        <h3>Focus Metrics</h3>
-        <div style="font-size: 56px; font-weight: 800; margin: 24px 0; font-family: 'Syne', sans-serif; background: linear-gradient(135deg, #00FF94 0%, #00D9FF 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${stats.percent}%</div>
-        <p style="opacity: 0.8; color: var(--text-secondary);">Task completion rate across all categories</p>
-        <div class="progress-bar-container" style="margin-top: 24px;">
-            <div class="progress-bar" style="width: ${stats.percent}%;"></div>
-        </div>
-    </div>
-
-    <!-- Quick Stats Grid -->
-    <div class="card">
-        <h3>Today's Overview</h3>
-        <div class="card-grid">
-            <div class="stat-card">
-                <div class="stat-number">${stats.todayDone}/${stats.todayTasks}</div>
-                <div class="stat-label">Today</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">${stats.pending}</div>
-                <div class="stat-label">Pending</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">${streak}</div>
-                <div class="stat-label">Streak</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">${store.journal.length}</div>
-                <div class="stat-label">Entries</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Tasks -->
-    <div class="card">
-        <div class="flex-between mb-2">
-            <h3>Active Tasks</h3>
-            <button class="btn-small btn-secondary" onclick="router('habits')">View All →</button>
-        </div>
-        ${renderQuickTasks()}
-    </div>
-
-    <!-- Active Goals Preview -->
-    ${store.goals.length > 0 ? `
-    <div class="card">
-        <div class="flex-between mb-2">
-            <h3>Goals Progress</h3>
-            <button class="btn-small btn-secondary" onclick="router('goals')">View All →</button>
-        </div>
-        ${renderGoalsPreview()}
-    </div>
-    ` : ''}
-
-    <!-- Recent Journal Entry -->
-    ${store.journal.length > 0 ? `
-    <div class="card">
-        <div class="flex-between mb-2">
-            <h3>Latest Entry</h3>
-            <button class="btn-small btn-secondary" onclick="router('journal')">View All →</button>
-        </div>
-        ${renderLatestJournal()}
-    </div>
-    ` : ''}
-`;
-
-// Fetch crypto prices
-fetchCryptoPrices();
-```
-
-}
-
-function renderQuickTasks() {
-const incompleteTasks = store.tasks.filter(t => !t.done).slice(0, 5);
-
-```
-if (incompleteTasks.length === 0) {
-    return '<div class="empty-state" style="padding: 40px 20px;"><div class="empty-state-icon">✨</div><div class="empty-state-text">All tasks complete</div></div>';
-}
-
-return incompleteTasks.map(task => `
-    <div class="habit-row">
-        <div class="habit-content">
-            <div class="habit-text" style="${task.done ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${task.text}</div>
-            <div class="habit-meta">
-                <span class="category-badge">${task.category}</span>
-                ${task.priority === 'high' ? '<span class="priority-badge priority-high">High</span>' : ''}
-                ${task.dueDate ? `<span>📅 ${formatDate(task.dueDate)}</span>` : ''}
-            </div>
-        </div>
-        <div class="habit-actions">
-            <div class="checkbox ${task.done ? 'checked' : ''}" onclick="toggleTask(${task.id}, 'home')">
-                ${task.done ? '✓' : ''}
-            </div>
-        </div>
-    </div>
-`).join('');
-```
-
-}
-
-function renderGoalsPreview() {
-return store.goals.slice(0, 2).map(goal => {
-const progress = Math.round((goal.current / goal.target) * 100);
-return `<div class="goal-card"> <div class="goal-header"> <div style="flex: 1;"> <div class="goal-title">${goal.title}</div> <div class="category-badge" style="margin-top: 8px; display: inline-block;">${goal.category}</div> </div> ${progress >= 100 ? '<div style="font-size: 32px;">✅</div>' : ''} </div> <div class="progress-bar-container"> <div class="progress-bar" style="width: ${Math.min(progress, 100)}%;"></div> </div> <div class="goal-progress-text">${goal.current} / ${goal.target} completed · ${progress}%</div> </div>`;
-}).join(’’);
-}
-
-function renderLatestJournal() {
-const latest = store.journal[store.journal.length - 1];
-return `<div class="journal-entry"> <div class="journal-header"> <span class="date-badge">${latest.date}</span> <span class="mood-indicator">${latest.mood || '📝'}</span> </div> <p class="journal-text">${latest.text.substring(0, 200)}${latest.text.length > 200 ? '...' : ''}</p> </div>`;
-}
-
-// Page: HABITS
-let currentFilter = ‘all’;
-let currentCategory = ‘all’;
-
-function renderHabits() {
-const app = document.getElementById(‘app’);
-document.getElementById(‘page-title’).innerText = “Tasks & Habits”;
-document.getElementById(‘header-actions’).innerHTML = `<button class="header-btn" onclick="openAddTaskModal()">+ Add Task</button>`;
-
-```
-const stats = getTaskStats();
-
-let filteredTasks = store.tasks;
-if (currentFilter === 'active') filteredTasks = filteredTasks.filter(t => !t.done);
-if (currentFilter === 'completed') filteredTasks = filteredTasks.filter(t => t.done);
-if (currentCategory !== 'all') filteredTasks = filteredTasks.filter(t => t.category === currentCategory);
-
-app.innerHTML = `
-    <!-- Stats Bar -->
-    <div class="card">
-        <div class="flex-between">
-            <div>
-                <div style="font-size: 28px; font-weight: 800; font-family: 'Syne', sans-serif;">${stats.done} / ${stats.total}</div>
-                <div class="text-muted text-small">Tasks Completed</div>
-            </div>
-            <div style="text-align: right;">
-                <div style="font-size: 28px; font-weight: 800; font-family: 'Syne', sans-serif;">${stats.percent}%</div>
-                <div class="text-muted text-small">Completion Rate</div>
-            </div>
-        </div>
-        <div class="progress-bar-container">
-            <div class="progress-bar" style="width: ${stats.percent}%;"></div>
-        </div>
-    </div>
-
-    <!-- Filters -->
-    <div class="filter-bar">
-        <div class="filter-chip ${currentFilter === 'all' ? 'active' : ''}" onclick="filterTasks('all')">
-            All (${store.tasks.length})
-        </div>
-        <div class="filter-chip ${currentFilter === 'active' ? 'active' : ''}" onclick="filterTasks('active')">
-            Active (${store.tasks.filter(t => !t.done).length})
-        </div>
-        <div class="filter-chip ${currentFilter === 'completed' ? 'active' : ''}" onclick="filterTasks('completed')">
-            Done (${store.tasks.filter(t => t.done).length})
-        </div>
-    </div>
-
-    <div class="filter-bar">
-        <div class="filter-chip ${currentCategory === 'all' ? 'active' : ''}" onclick="filterByCategory('all')">
-            All
-        </div>
-        ${store.categories.map(cat => `
-            <div class="filter-chip ${currentCategory === cat ? 'active' : ''}" onclick="filterByCategory('${cat}')">
-                ${cat}
-            </div>
-        `).join('')}
-    </div>
-
-    <!-- Tasks List -->
-    <div id="tasks-container">
-        ${renderTasksList(filteredTasks)}
-    </div>
-`;
-```
-
-}
-
-function renderTasksList(tasks) {
-if (tasks.length === 0) {
-return `<div class="empty-state"> <div class="empty-state-icon">📋</div> <div class="empty-state-text">No tasks found</div> <div class="empty-state-subtext">Create your first task to get started</div> </div>`;
-}
-
-```
-return tasks.map(task => `
-    <div class="card">
-        <div class="habit-row" style="border: none; padding: 0;">
-            <div class="habit-content">
-                <div class="habit-text" style="${task.done ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${task.text}</div>
-                <div class="habit-meta">
-                    <span class="category-badge">${task.category}</span>
-                    ${task.priority !== 'low' ? `<span class="priority-badge priority-${task.priority}">${task.priority}</span>` : ''}
-                    ${task.dueDate ? `<span>📅 ${formatDate(task.dueDate)}</span>` : ''}
-                </div>
-            </div>
-            <div class="habit-actions">
-                <button class="btn-small btn-secondary" onclick="editTask(${task.id})">✏️</button>
-                <button class="btn-small btn-danger" onclick="deleteTask(${task.id})">🗑️</button>
-                <div class="checkbox ${task.done ? 'checked' : ''}" onclick="toggleTask(${task.id}, 'habits')">
-                    ${task.done ? '✓' : ''}
-                </div>
-            </div>
-        </div>
-    </div>
-`).join('');
-```
-
-}
-
-function filterTasks(filter) {
-currentFilter = filter;
-renderHabits();
-}
-
-function filterByCategory(category) {
-currentCategory = category;
-renderHabits();
-}
-
-// Page: JOURNAL
-function renderJournal() {
-const app = document.getElementById(‘app’);
-document.getElementById(‘page-title’).innerText = “Journal”;
-document.getElementById(‘header-actions’).innerHTML = `<button class="header-btn" onclick="openAddJournalModal()">+ New Entry</button>`;
-
-```
-const sortedJournal = [...store.journal].reverse();
-
-app.innerHTML = `
-    <!-- Journal Stats -->
-    <div class="card">
-        <div class="flex-between">
-            <div>
-                <div style="font-size: 28px; font-weight: 800; font-family: 'Syne', sans-serif;">${store.journal.length}</div>
-                <div class="text-muted text-small">Total Entries</div>
-            </div>
-            <div style="font-size: 40px;">📓</div>
-        </div>
-    </div>
-
-    <!-- Entries -->
-    <div id="journal-container">
-        ${sortedJournal.length === 0 ? `
-            <div class="empty-state">
-                <div class="empty-state-icon">✍️</div>
-                <div class="empty-state-text">No journal entries yet</div>
-                <div class="empty-state-subtext">Start writing to capture your thoughts</div>
-            </div>
-        ` : sortedJournal.map(entry => `
-            <div class="journal-entry">
-                <div class="journal-header">
-                    <span class="date-badge">${entry.date}</span>
-                    <div style="display: flex; gap: 12px; align-items: center;">
-                        <span class="mood-indicator">${entry.mood || '📝'}</span>
-                        <button class="btn-small btn-danger" onclick="deleteJournalEntry(${entry.id})">🗑️</button>
-                    </div>
-                </div>
-                <p class="journal-text">${entry.text}</p>
-            </div>
-        `).join('')}
-    </div>
-`;
-```
-
-}
-
-// Page: GOALS
-function renderGoals() {
-const app = document.getElementById(‘app’);
-document.getElementById(‘page-title’).innerText = “Goals”;
-document.getElementById(‘header-actions’).innerHTML = `<button class="header-btn" onclick="openAddGoalModal()">+ New Goal</button>`;
-
-```
-app.innerHTML = `
-    <!-- Goals Stats -->
-    <div class="card">
-        <div class="flex-between">
-            <div>
-                <div style="font-size: 28px; font-weight: 800; font-family: 'Syne', sans-serif;">${store.goals.length}</div>
-                <div class="text-muted text-small">Active Goals</div>
-            </div>
-            <div>
-                <div style="font-size: 28px; font-weight: 800; font-family: 'Syne', sans-serif;">${store.goals.filter(g => (g.current/g.target) >= 1).length}</div>
-                <div class="text-muted text-small">Completed</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Goals List -->
-    <div id="goals-container">
-        ${store.goals.length === 0 ? `
-            <div class="empty-state">
-                <div class="empty-state-icon">🎯</div>
-                <div class="empty-state-text">No goals set</div>
-                <div class="empty-state-subtext">Create your first goal to start tracking</div>
-            </div>
-        ` : store.goals.map(goal => {
-            const progress = Math.round((goal.current / goal.target) * 100);
-            const isComplete = progress >= 100;
-            return `
-                <div class="card goal-card">
-                    <div class="goal-header">
-                        <div style="flex: 1;">
-                            <div class="goal-title">${goal.title}</div>
-                            <div style="font-size: 13px; color: var(--text-secondary); margin-top: 6px;">${goal.description}</div>
-                            <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
-                                <span class="category-badge">${goal.category}</span>
-                                ${goal.deadline ? `<span class="text-small text-muted">📅 ${formatDate(goal.deadline)}</span>` : ''}
-                            </div>
-                        </div>
-                        ${isComplete ? '<div style="font-size: 40px;">✅</div>' : ''}
-                    </div>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" style="width: ${Math.min(progress, 100)}%;"></div>
-                    </div>
-                    <div class="flex-between" style="margin-top: 16px;">
-                        <div class="goal-progress-text">${goal.current} / ${goal.target} · ${progress}%</div>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn-small btn-secondary" onclick="updateGoalProgress(${goal.id}, -1)">−</button>
-                            <button class="btn-small btn-secondary" onclick="updateGoalProgress(${goal.id}, 1)">+</button>
-                            <button class="btn-small btn-danger" onclick="deleteGoal(${goal.id})">🗑️</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('')}
-    </div>
-`;
-```
-
-}
-
-// Page: SETTINGS
-function renderSettings() {
-const app = document.getElementById(‘app’);
-document.getElementById(‘page-title’).innerText = “Settings”;
-document.getElementById(‘header-actions’).innerHTML = ‘’;
-
-```
-app.innerHTML = `
-    <div class="card">
-        <h3>Categories</h3>
-        <p class="text-muted text-small mb-2">Manage your task categories</p>
-        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
-            ${store.categories.map(cat => `
-                <span class="category-badge" style="display: flex; align-items: center; gap: 8px; padding: 8px 14px;">
-                    ${cat}
-                    <span onclick="deleteCategory('${cat}')" style="cursor: pointer; opacity: 0.7; font-size: 16px;">×</span>
-                </span>
-            `).join('')}
-        </div>
-        <div style="display: flex; gap: 10px;">
-            <input type="text" id="newCategory" placeholder="New category name..." style="margin: 0; flex: 1;">
-            <button class="btn btn-small" onclick="addCategory()" style="width: auto; padding: 14px 24px;">Add</button>
-        </div>
-    </div>
-
-    <div class="card">
-        <h3>Statistics</h3>
-        <div class="card-grid">
-            <div class="stat-card">
-                <div class="stat-number">${store.stats.totalTasksCompleted}</div>
-                <div class="stat-label">Completed</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">${store.stats.currentStreak}</div>
-                <div class="stat-label">Streak</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">${store.stats.longestStreak}</div>
-                <div class="stat-label">Best Streak</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">${store.journal.length}</div>
-                <div class="stat-label">Entries</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <h3>Data Management</h3>
-        <p class="text-muted text-small mb-2">Export or reset your data</p>
-        <button class="btn btn-secondary" onclick="exportData()">📥 Export Data (JSON)</button>
-        <button class="btn btn-secondary" onclick="importDataPrompt()">📤 Import Data</button>
-        <button class="btn btn-danger" onclick="clearData()">🗑️ Reset All Data</button>
-    </div>
-
-    <div class="card">
-        <h3>About</h3>
-        <p class="text-muted text-small">Jordy Life OS · Fintech Edition</p>
-        <p class="text-muted text-small">Built for productivity and focus</p>
-        <p class="text-muted text-small" style="margin-top: 12px;">Powered by CoinGecko API</p>
-    </div>
-`;
-```
-
-}
-
-// — 5. MODAL FUNCTIONS —
-
-function openAddTaskModal() {
-const modal = `<div class="modal-overlay" onclick="closeModal(event)"> <div class="modal" onclick="event.stopPropagation()"> <div class="modal-header"> <div class="modal-title">Add New Task</div> </div> <div class="modal-body"> <div class="form-group"> <label class="form-label">Task Name</label> <input type="text" id="modalTaskText" placeholder="What needs to be done?"> </div> <div class="form-group"> <label class="form-label">Category</label> <select id="modalTaskCategory"> ${store.categories.map(cat =>`<option value="${cat}">${cat}</option>`).join('')} </select> </div> <div class="form-group"> <label class="form-label">Priority</label> <select id="modalTaskPriority"> <option value="low">Low</option> <option value="medium" selected>Medium</option> <option value="high">High</option> </select> </div> <div class="form-group"> <label class="form-label">Due Date (Optional)</label> <input type="date" id="modalTaskDueDate"> </div> </div> <div class="modal-footer"> <button class="btn btn-secondary" onclick="closeModal()">Cancel</button> <button class="btn" onclick="addTaskFromModal()">Add Task</button> </div> </div> </div> `;
-document.getElementById(‘modal-container’).innerHTML = modal;
-}
-
-function openAddJournalModal() {
-const modal = `<div class="modal-overlay" onclick="closeModal(event)"> <div class="modal" onclick="event.stopPropagation()"> <div class="modal-header"> <div class="modal-title">New Journal Entry</div> </div> <div class="modal-body"> <div class="form-group"> <label class="form-label">How are you feeling?</label> <div class="mood-selector"> <span onclick="selectMood('😊')" class="mood-option">😊</span> <span onclick="selectMood('😐')" class="mood-option">😐</span> <span onclick="selectMood('😔')" class="mood-option">😔</span> <span onclick="selectMood('😤')" class="mood-option">😤</span> <span onclick="selectMood('🤔')" class="mood-option">🤔</span> <span onclick="selectMood('🎉')" class="mood-option">🎉</span> </div> <input type="hidden" id="selectedMood" value="📝"> </div> <div class="form-group"> <label class="form-label">Your Thoughts</label> <textarea id="modalJournalText" rows="8" placeholder="What's on your mind today?"></textarea> </div> </div> <div class="modal-footer"> <button class="btn btn-secondary" onclick="closeModal()">Cancel</button> <button class="btn" onclick="addJournalFromModal()">Save Entry</button> </div> </div> </div>`;
-document.getElementById(‘modal-container’).innerHTML = modal;
-}
-
-function openAddGoalModal() {
-const modal = `<div class="modal-overlay" onclick="closeModal(event)"> <div class="modal" onclick="event.stopPropagation()"> <div class="modal-header"> <div class="modal-title">Create New Goal</div> </div> <div class="modal-body"> <div class="form-group"> <label class="form-label">Goal Title</label> <input type="text" id="modalGoalTitle" placeholder="e.g., Read 12 books this year"> </div> <div class="form-group"> <label class="form-label">Description</label> <textarea id="modalGoalDescription" rows="3" placeholder="What's this goal about?"></textarea> </div> <div class="form-group"> <label class="form-label">Category</label> <select id="modalGoalCategory"> ${store.categories.map(cat =>`<option value="${cat}">${cat}</option>`).join('')} </select> </div> <div class="form-group"> <label class="form-label">Target Number</label> <input type="number" id="modalGoalTarget" value="10" min="1"> </div> <div class="form-group"> <label class="form-label">Current Progress</label> <input type="number" id="modalGoalCurrent" value="0" min="0"> </div> <div class="form-group"> <label class="form-label">Deadline (Optional)</label> <input type="date" id="modalGoalDeadline"> </div> </div> <div class="modal-footer"> <button class="btn btn-secondary" onclick="closeModal()">Cancel</button> <button class="btn" onclick="addGoalFromModal()">Create Goal</button> </div> </div> </div> `;
-document.getElementById(‘modal-container’).innerHTML = modal;
-}
-
-function selectMood(mood) {
-document.getElementById(‘selectedMood’).value = mood;
-document.querySelectorAll(’.mood-option’).forEach(el => {
-if (el.innerText === mood) {
-el.classList.add(‘selected’);
-} else {
-el.classList.remove(‘selected’);
-}
-});
-}
-
-function closeModal(event) {
-if (event && event.target.className !== ‘modal-overlay’) return;
-document.getElementById(‘modal-container’).innerHTML = ‘’;
-}
-
-// — 6. ACTION FUNCTIONS —
-
-function router(page) {
-document.querySelectorAll(’.nav-item’).forEach(el => el.classList.remove(‘active’));
-const icons = document.querySelectorAll(’.nav-item’);
-const pages = [‘home’, ‘habits’, ‘journal’, ‘goals’, ‘settings’];
-const index = pages.indexOf(page);
-if (index !== -1) icons[index].classList.add(‘active’);
-
-```
-if(page === 'home') renderHome();
-if(page === 'habits') renderHabits();
-if(page === 'journal') renderJournal();
-if(page === 'goals') renderGoals();
-if(page === 'settings') renderSettings();
-
-window.scrollTo(0, 0);
-```
-
-}
-
-function toggleTask(id, returnPage) {
-const task = store.tasks.find(t => t.id === id);
-if(task) {
-task.done = !task.done;
-if (task.done) {
-store.stats.totalTasksCompleted++;
-} else {
-store.stats.totalTasksCompleted = Math.max(0, store.stats.totalTasksCompleted - 1);
-}
-save();
-router(returnPage);
-}
-}
-
-function addTaskFromModal() {
-const text = document.getElementById(‘modalTaskText’).value.trim();
-const category = document.getElementById(‘modalTaskCategory’).value;
-const priority = document.getElementById(‘modalTaskPriority’).value;
-const dueDate = document.getElementById(‘modalTaskDueDate’).value || null;
-
-```
-if(text) {
-    store.tasks.push({ 
-        id: Date.now(), 
-        text: text, 
-        done: false,
-        category: category,
-        priority: priority,
-        dueDate: dueDate,
-        createdAt: new Date().toISOString()
+navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const page = link.dataset.page;
+        switchPage(page);
     });
-    save();
-    closeModal();
-    router('habits');
+});
+```
+
+}
+
+function switchPage(pageName) {
+// Update state
+AppState.currentPage = pageName;
+
+```
+// Update nav links
+document.querySelectorAll('.nav-link').forEach(link => {
+    link.classList.toggle('active', link.dataset.page === pageName);
+});
+
+// Update pages
+document.querySelectorAll('.page').forEach(page => {
+    page.classList.remove('active');
+});
+document.getElementById(`${pageName}-page`).classList.add('active');
+
+// Refresh page content
+if (pageName === 'dashboard') renderDashboard();
+if (pageName === 'budget') renderBudgetPage();
+if (pageName === 'tasks') renderTasksPage();
+```
+
+}
+
+/* ===================================
+DASHBOARD PAGE
+=================================== */
+
+function initDashboard() {
+// Viewer selector
+document.querySelectorAll(’.viewer-btn’).forEach(btn => {
+btn.addEventListener(‘click’, () => {
+document.querySelectorAll(’.viewer-btn’).forEach(b => b.classList.remove(‘active’));
+btn.classList.add(‘active’);
+AppState.currentViewer = btn.dataset.viewer;
+renderDashboard();
+});
+});
+
+```
+// Time toggle
+document.querySelectorAll('.time-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        AppState.currentTimeFrame = btn.dataset.time;
+        renderDashboard();
+    });
+});
+```
+
+}
+
+function renderDashboard() {
+renderScheduleCard();
+renderTasksCard();
+renderBudgetCard();
+renderMealsCard();
+renderPriorityCard();
+checkAlerts();
+}
+
+function renderScheduleCard() {
+const content = document.getElementById(‘schedule-content’);
+const count = document.getElementById(‘schedule-count’);
+
+```
+// Placeholder - no calendar integration yet
+content.innerHTML = '<p class="empty-state">No events scheduled</p>';
+count.textContent = '0';
+```
+
+}
+
+function renderTasksCard() {
+const content = document.getElementById(‘tasks-content’);
+const count = document.getElementById(‘tasks-count’);
+
+```
+const filteredTasks = filterTasks(AppState.tasks);
+const incompleteTasks = filteredTasks.filter(t => !t.completed);
+
+if (incompleteTasks.length === 0) {
+    content.innerHTML = '<p class="empty-state">No tasks due</p>';
+    count.textContent = '0';
+    return;
+}
+
+count.textContent = incompleteTasks.length;
+
+let html = '<div class="budget-overview">';
+incompleteTasks.slice(0, 5).forEach(task => {
+    const dueDate = new Date(task.dueDate);
+    const formattedDate = dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    
+    html += `
+        <div class="budget-row">
+            <span>${task.name}</span>
+            <span style="color: var(--text-tertiary); font-size: 0.8rem">${formattedDate}</span>
+        </div>
+    `;
+});
+html += '</div>';
+
+content.innerHTML = html;
+```
+
+}
+
+function renderBudgetCard() {
+const statusEl = document.getElementById(‘budget-status’);
+const incomeEl = document.getElementById(‘budget-income’);
+const expensesEl = document.getElementById(‘budget-expenses’);
+const remainingEl = document.getElementById(‘budget-remaining’);
+
+```
+const totals = calculateBudgetTotals();
+
+incomeEl.textContent = formatCurrency(totals.income);
+expensesEl.textContent = formatCurrency(totals.expenses);
+remainingEl.textContent = formatCurrency(totals.remaining);
+
+if (totals.remaining >= 0) {
+    statusEl.textContent = '✓';
+    statusEl.style.color = 'var(--accent-emerald)';
+    remainingEl.style.color = 'var(--accent-emerald)';
+} else {
+    statusEl.textContent = '!';
+    statusEl.style.color = 'var(--color-danger)';
+    remainingEl.style.color = 'var(--color-danger)';
 }
 ```
 
 }
 
-function deleteTask(id) {
-if(confirm(“Delete this task?”)) {
-store.tasks = store.tasks.filter(t => t.id !== id);
-save();
-router(‘habits’);
+function renderMealsCard() {
+const content = document.getElementById(‘meals-content’);
+const count = document.getElementById(‘meals-count’);
+
+```
+const savedMeals = AppState.meals.saved;
+
+if (savedMeals.length === 0) {
+    content.innerHTML = '<p class="empty-state">No meals planned</p>';
+    count.textContent = '0';
+    return;
+}
+
+count.textContent = savedMeals.length;
+
+let html = '<div class="budget-overview">';
+savedMeals.slice(0, 5).forEach(meal => {
+    html += `
+        <div class="budget-row">
+            <span>${meal.name}</span>
+            <span style="color: var(--text-tertiary); font-size: 0.8rem">${meal.time}min</span>
+        </div>
+    `;
+});
+html += '</div>';
+
+content.innerHTML = html;
+```
+
+}
+
+function renderPriorityCard() {
+const content = document.getElementById(‘priority-content’);
+
+```
+const highPriorityTasks = AppState.tasks
+    .filter(t => !t.completed && t.priority === 'high')
+    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+
+if (highPriorityTasks.length === 0) {
+    content.innerHTML = '<p class="empty-state">No priorities set</p>';
+    return;
+}
+
+const topTask = highPriorityTasks[0];
+const dueDate = new Date(topTask.dueDate);
+const formattedDate = dueDate.toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    month: 'long', 
+    day: 'numeric' 
+});
+
+content.innerHTML = `
+    <div style="text-align: center; padding: var(--spacing-lg) 0;">
+        <h3 style="color: var(--accent-emerald); font-size: 1.5rem; margin-bottom: var(--spacing-sm);">
+            ${topTask.name}
+        </h3>
+        <p style="color: var(--text-secondary); margin-bottom: var(--spacing-xs);">
+            Due: ${formattedDate}
+        </p>
+        <p style="color: var(--text-tertiary); font-size: 0.875rem;">
+            ${topTask.category} • ${topTask.assignee}
+        </p>
+    </div>
+`;
+```
+
+}
+
+function checkAlerts() {
+const banner = document.getElementById(‘alert-banner’);
+
+```
+const overdueTasks = AppState.tasks.filter(t => {
+    if (t.completed) return false;
+    const dueDate = new Date(t.dueDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return dueDate < today;
+});
+
+if (overdueTasks.length > 0) {
+    banner.textContent = `⚠ You have ${overdueTasks.length} overdue task${overdueTasks.length > 1 ? 's' : ''}`;
+    banner.classList.remove('hidden');
+} else {
+    banner.classList.add('hidden');
+}
+```
+
+}
+
+function filterTasks(tasks) {
+const viewer = AppState.currentViewer;
+const timeFrame = AppState.currentTimeFrame;
+
+```
+return tasks.filter(task => {
+    // Filter by viewer
+    if (viewer !== 'all') {
+        if (viewer === 'household' && task.assignee !== 'household') return false;
+        if (viewer !== 'household' && task.assignee !== viewer) return false;
+    }
+    
+    // Filter by time frame
+    const dueDate = new Date(task.dueDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (timeFrame === 'today') {
+        const taskDate = new Date(dueDate);
+        taskDate.setHours(0, 0, 0, 0);
+        return taskDate.getTime() === today.getTime();
+    } else if (timeFrame === 'week') {
+        const weekFromNow = new Date(today);
+        weekFromNow.setDate(weekFromNow.getDate() + 7);
+        return dueDate >= today && dueDate <= weekFromNow;
+    }
+    
+    return true;
+});
+```
+
+}
+
+/* ===================================
+BUDGET PAGE
+=================================== */
+
+function initBudget() {
+document.getElementById(‘add-income’).addEventListener(‘click’, () => addBudgetItem(‘income’));
+document.getElementById(‘add-fixed-expense’).addEventListener(‘click’, () => addBudgetItem(‘fixedExpenses’));
+document.getElementById(‘add-variable-expense’).addEventListener(‘click’, () => addBudgetItem(‘variableExpenses’));
+document.getElementById(‘save-budget’).addEventListener(‘click’, saveBudget);
+}
+
+function renderBudgetPage() {
+renderBudgetList(‘income’, AppState.budget.income);
+renderBudgetList(‘fixedExpenses’, AppState.budget.fixedExpenses);
+renderBudgetList(‘variableExpenses’, AppState.budget.variableExpenses);
+updateBudgetTotals();
+}
+
+function addBudgetItem(type) {
+const item = {
+id: Date.now(),
+name: ‘’,
+amount: 0
+};
+
+```
+AppState.budget[type].push(item);
+renderBudgetPage();
+
+// Focus on the new item's name input
+setTimeout(() => {
+    const inputs = document.querySelectorAll(`#${type === 'income' ? 'income' : type.replace('Expenses', '-expenses')}-list input`);
+    if (inputs.length > 0) {
+        inputs[inputs.length - 2].focus();
+    }
+}, 0);
+```
+
+}
+
+function renderBudgetList(type, items) {
+const listId = type === ‘income’ ? ‘income-list’ :
+type === ‘fixedExpenses’ ? ‘fixed-expenses-list’ :
+‘variable-expenses-list’;
+
+```
+const list = document.getElementById(listId);
+
+if (items.length === 0) {
+    list.innerHTML = '<p class="empty-state" style="text-align: left; padding: var(--spacing-md) 0;">No items added</p>';
+    return;
+}
+
+let html = '';
+items.forEach(item => {
+    html += `
+        <div class="budget-item">
+            <input type="text" 
+                   placeholder="Name" 
+                   value="${item.name}" 
+                   onchange="updateBudgetItem('${type}', ${item.id}, 'name', this.value)"
+                   style="flex: 1; margin-right: var(--spacing-sm);">
+            <input type="number" 
+                   placeholder="0.00" 
+                   value="${item.amount}" 
+                   step="0.01"
+                   onchange="updateBudgetItem('${type}', ${item.id}, 'amount', parseFloat(this.value) || 0)">
+            <button onclick="deleteBudgetItem('${type}', ${item.id})">×</button>
+        </div>
+    `;
+});
+
+list.innerHTML = html;
+```
+
+}
+
+function updateBudgetItem(type, id, field, value) {
+const item = AppState.budget[type].find(i => i.id === id);
+if (item) {
+item[field] = value;
+updateBudgetTotals();
+}
+}
+
+function deleteBudgetItem(type, id) {
+AppState.budget[type] = AppState.budget[type].filter(i => i.id !== id);
+renderBudgetPage();
+}
+
+function calculateBudgetTotals() {
+const income = AppState.budget.income.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+const fixedExpenses = AppState.budget.fixedExpenses.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+const variableExpenses = AppState.budget.variableExpenses.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+const expenses = fixedExpenses + variableExpenses;
+const remaining = income - expenses;
+
+```
+return { income, expenses, remaining };
+```
+
+}
+
+function updateBudgetTotals() {
+const totals = calculateBudgetTotals();
+
+```
+// Update individual totals
+document.getElementById('total-income').textContent = formatCurrency(totals.income);
+document.getElementById('total-fixed').textContent = formatCurrency(
+    AppState.budget.fixedExpenses.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0)
+);
+document.getElementById('total-variable').textContent = formatCurrency(
+    AppState.budget.variableExpenses.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0)
+);
+
+// Update summary
+document.getElementById('summary-income').textContent = formatCurrency(totals.income);
+document.getElementById('summary-expenses').textContent = formatCurrency(totals.expenses);
+document.getElementById('summary-remaining').textContent = formatCurrency(totals.remaining);
+
+// Update progress bar
+const progress = document.getElementById('budget-progress');
+const percentage = totals.income > 0 ? (totals.expenses / totals.income) * 100 : 0;
+progress.style.width = `${Math.min(percentage, 100)}%`;
+
+// Color coding
+const remainingEl = document.getElementById('summary-remaining');
+if (totals.remaining >= 0) {
+    remainingEl.style.color = 'var(--accent-emerald)';
+} else {
+    remainingEl.style.color = 'var(--color-danger)';
+}
+```
+
+}
+
+function saveBudget() {
+Storage.saveState();
+showNotification(‘Budget saved successfully!’);
+}
+
+function formatCurrency(amount) {
+return new Intl.NumberFormat(‘en-US’, {
+style: ‘currency’,
+currency: ‘USD’
+}).format(amount);
+}
+
+/* ===================================
+TASKS PAGE
+=================================== */
+
+function initTasks() {
+// Add task button
+document.getElementById(‘add-task’).addEventListener(‘click’, openTaskModal);
+
+```
+// Modal controls
+document.querySelector('.modal-close').addEventListener('click', closeTaskModal);
+document.querySelector('.modal-cancel').addEventListener('click', closeTaskModal);
+document.getElementById('save-task').addEventListener('click', saveTask);
+
+// Filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        AppState.currentTaskFilter = btn.dataset.filter;
+        renderTasksPage();
+    });
+});
+
+// Close modal on background click
+document.getElementById('task-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'task-modal') closeTaskModal();
+});
+```
+
+}
+
+function renderTasksPage() {
+const list = document.getElementById(‘task-list’);
+const filter = AppState.currentTaskFilter;
+
+```
+let filteredTasks = [...AppState.tasks];
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+// Apply filters
+if (filter === 'today') {
+    filteredTasks = filteredTasks.filter(t => {
+        const taskDate = new Date(t.dueDate);
+        taskDate.setHours(0, 0, 0, 0);
+        return taskDate.getTime() === today.getTime();
+    });
+} else if (filter === 'upcoming') {
+    filteredTasks = filteredTasks.filter(t => {
+        const taskDate = new Date(t.dueDate);
+        return taskDate > today && !t.completed;
+    });
+} else if (filter === 'overdue') {
+    filteredTasks = filteredTasks.filter(t => {
+        const taskDate = new Date(t.dueDate);
+        return taskDate < today && !t.completed;
+    });
+}
+
+// Sort by date
+filteredTasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+
+if (filteredTasks.length === 0) {
+    list.innerHTML = '<p class="empty-state">No tasks found</p>';
+    return;
+}
+
+let html = '';
+filteredTasks.forEach(task => {
+    const dueDate = new Date(task.dueDate);
+    const formattedDate = dueDate.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: dueDate.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
+    });
+    
+    html += `
+        <div class="task-item ${task.completed ? 'completed' : ''}">
+            <input type="checkbox" 
+                   class="task-checkbox" 
+                   ${task.completed ? 'checked' : ''}
+                   onchange="toggleTaskComplete(${task.id})">
+            <div class="task-details">
+                <div class="task-name">${task.name}</div>
+                <div class="task-meta">
+                    <span class="task-priority ${task.priority}">${task.priority}</span>
+                    <span>${formattedDate}</span>
+                    <span>${task.category}</span>
+                    <span>${task.assignee}</span>
+                </div>
+            </div>
+            <div class="task-actions">
+                <button onclick="editTask(${task.id})" title="Edit">✎</button>
+                <button onclick="deleteTask(${task.id})" title="Delete">×</button>
+            </div>
+        </div>
+    `;
+});
+
+list.innerHTML = html;
+```
+
+}
+
+function openTaskModal(task = null) {
+const modal = document.getElementById(‘task-modal’);
+const title = document.getElementById(‘modal-title’);
+
+```
+if (task) {
+    // Edit mode
+    AppState.editingTask = task.id;
+    title.textContent = 'Edit Task';
+    document.getElementById('task-name').value = task.name;
+    document.getElementById('task-date').value = task.dueDate;
+    document.getElementById('task-priority').value = task.priority;
+    document.getElementById('task-category').value = task.category;
+    document.getElementById('task-assignee').value = task.assignee;
+} else {
+    // New task mode
+    AppState.editingTask = null;
+    title.textContent = 'New Task';
+    document.getElementById('task-name').value = '';
+    document.getElementById('task-date').value = '';
+    document.getElementById('task-priority').value = 'medium';
+    document.getElementById('task-category').value = '';
+    document.getElementById('task-assignee').value = 'me';
+}
+
+modal.classList.remove('hidden');
+```
+
+}
+
+function closeTaskModal() {
+document.getElementById(‘task-modal’).classList.add(‘hidden’);
+AppState.editingTask = null;
+}
+
+function saveTask() {
+const name = document.getElementById(‘task-name’).value.trim();
+const dueDate = document.getElementById(‘task-date’).value;
+const priority = document.getElementById(‘task-priority’).value;
+const category = document.getElementById(‘task-category’).value.trim();
+const assignee = document.getElementById(‘task-assignee’).value;
+
+```
+if (!name || !dueDate) {
+    alert('Please fill in task name and due date');
+    return;
+}
+
+if (AppState.editingTask) {
+    // Update existing task
+    const task = AppState.tasks.find(t => t.id === AppState.editingTask);
+    if (task) {
+        task.name = name;
+        task.dueDate = dueDate;
+        task.priority = priority;
+        task.category = category;
+        task.assignee = assignee;
+    }
+} else {
+    // Create new task
+    const task = {
+        id: Date.now(),
+        name,
+        dueDate,
+        priority,
+        category,
+        assignee,
+        completed: false
+    };
+    AppState.tasks.push(task);
+}
+
+Storage.saveState();
+renderTasksPage();
+closeTaskModal();
+```
+
+}
+
+function toggleTaskComplete(id) {
+const task = AppState.tasks.find(t => t.id === id);
+if (task) {
+task.completed = !task.completed;
+Storage.saveState();
+renderTasksPage();
+renderDashboard();
 }
 }
 
 function editTask(id) {
-const task = store.tasks.find(t => t.id === id);
-if (!task) return;
+const task = AppState.tasks.find(t => t.id === id);
+if (task) {
+openTaskModal(task);
+}
+}
+
+function deleteTask(id) {
+if (confirm(‘Are you sure you want to delete this task?’)) {
+AppState.tasks = AppState.tasks.filter(t => t.id !== id);
+Storage.saveState();
+renderTasksPage();
+renderDashboard();
+}
+}
+
+/* ===================================
+MEALS PAGE
+=================================== */
+
+function initMeals() {
+// Vibe selector
+document.querySelectorAll(’.vibe-btn’).forEach(btn => {
+btn.addEventListener(‘click’, () => {
+document.querySelectorAll(’.vibe-btn’).forEach(b => b.classList.remove(‘active’));
+btn.classList.add(‘active’);
+AppState.selectedVibe = btn.dataset.vibe;
+});
+});
 
 ```
-const modal = `
-    <div class="modal-overlay" onclick="closeModal(event)">
-        <div class="modal" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <div class="modal-title">Edit Task</div>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Task Name</label>
-                    <input type="text" id="editTaskText" value="${task.text}">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Category</label>
-                    <select id="editTaskCategory">
-                        ${store.categories.map(cat => `<option value="${cat}" ${task.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Priority</label>
-                    <select id="editTaskPriority">
-                        <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Low</option>
-                        <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>Medium</option>
-                        <option value="high" ${task.priority === 'high' ? 'selected' : ''}>High</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Due Date</label>
-                    <input type="date" id="editTaskDueDate" value="${task.dueDate || ''}">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                <button class="btn" onclick="saveTaskEdit(${id})">Save Changes</button>
-            </div>
+// Suggest meals button
+document.getElementById('suggest-meals').addEventListener('click', suggestMeals);
+```
+
+}
+
+function suggestMeals() {
+const ingredients = document.getElementById(‘ingredients-input’).value.trim();
+const time = document.getElementById(‘time-available’).value;
+const vibe = AppState.selectedVibe;
+
+```
+if (!ingredients) {
+    alert('Please enter some ingredients');
+    return;
+}
+
+// Generate mock suggestions based on inputs
+const suggestions = generateMealSuggestions(ingredients, time, vibe);
+AppState.meals.suggestions = suggestions;
+
+renderMealSuggestions();
+```
+
+}
+
+function generateMealSuggestions(ingredients, time, vibe) {
+// This is placeholder logic - in production, this could integrate with an AI API
+const ingredientList = ingredients.toLowerCase().split(’,’).map(i => i.trim());
+const timeNum = parseInt(time);
+
+```
+const mealTemplates = {
+    quick: [
+        { name: 'Stir Fry', time: 15, base: ['rice', 'vegetables', 'chicken', 'soy sauce'] },
+        { name: 'Pasta Aglio e Olio', time: 20, base: ['pasta', 'garlic', 'olive oil'] },
+        { name: 'Quesadilla', time: 10, base: ['tortilla', 'cheese'] }
+    ],
+    comfort: [
+        { name: 'Mac and Cheese', time: 30, base: ['pasta', 'cheese', 'milk'] },
+        { name: 'Chicken Soup', time: 45, base: ['chicken', 'vegetables', 'broth'] },
+        { name: 'Mashed Potatoes', time: 30, base: ['potatoes', 'butter', 'milk'] }
+    ],
+    healthy: [
+        { name: 'Grilled Chicken Salad', time: 25, base: ['chicken', 'lettuce', 'vegetables'] },
+        { name: 'Buddha Bowl', time: 30, base: ['rice', 'vegetables', 'chickpeas'] },
+        { name: 'Salmon with Veggies', time: 35, base: ['salmon', 'vegetables'] }
+    ],
+    fancy: [
+        { name: 'Pan-Seared Salmon', time: 30, base: ['salmon', 'lemon', 'herbs'] },
+        { name: 'Risotto', time: 45, base: ['rice', 'broth', 'parmesan'] },
+        { name: 'Stuffed Chicken Breast', time: 60, base: ['chicken', 'cheese', 'spinach'] }
+    ]
+};
+
+const vibeTemplates = vibe ? mealTemplates[vibe] : Object.values(mealTemplates).flat();
+
+// Filter meals that match time and have some ingredient overlap
+const suggestions = vibeTemplates
+    .filter(meal => meal.time <= timeNum)
+    .map(meal => {
+        const matchCount = meal.base.filter(ingredient => 
+            ingredientList.some(userIng => 
+                userIng.includes(ingredient) || ingredient.includes(userIng)
+            )
+        ).length;
+        return { ...meal, matchCount };
+    })
+    .sort((a, b) => b.matchCount - a.matchCount)
+    .slice(0, 3)
+    .map(meal => ({
+        name: meal.name,
+        time: meal.time,
+        description: `A delicious ${vibe || 'homemade'} meal ready in ${meal.time} minutes`,
+        ingredients: meal.base
+    }));
+
+return suggestions.length > 0 ? suggestions : [
+    {
+        name: 'Custom Creation',
+        time: timeNum,
+        description: `Create something unique with your ingredients in ${timeNum} minutes`,
+        ingredients: ingredientList
+    }
+];
+```
+
+}
+
+function renderMealSuggestions() {
+const container = document.getElementById(‘meal-suggestions’);
+const suggestions = AppState.meals.suggestions;
+
+```
+if (suggestions.length === 0) {
+    container.innerHTML = '<p class="empty-state">Enter ingredients and preferences to see suggestions</p>';
+    return;
+}
+
+let html = '';
+suggestions.forEach(meal => {
+    html += `
+        <div class="meal-card">
+            <h3>${meal.name}</h3>
+            <p>${meal.description}</p>
+            <p style="font-size: 0.8rem; color: var(--text-tertiary);">
+                Ingredients: ${meal.ingredients.join(', ')}
+            </p>
+            <button onclick="saveMeal('${meal.name}', ${meal.time})">Add to Plan</button>
         </div>
-    </div>
-`;
-document.getElementById('modal-container').innerHTML = modal;
+    `;
+});
+
+container.innerHTML = html;
 ```
 
 }
 
-function saveTaskEdit(id) {
-const task = store.tasks.find(t => t.id === id);
-if (!task) return;
+function saveMeal(name, time) {
+const meal = { name, time, id: Date.now() };
+AppState.meals.saved.push(meal);
+Storage.saveState();
+renderSavedMeals();
+renderDashboard();
+showNotification(`${name} added to meal plan!`);
+}
+
+function renderSavedMeals() {
+const container = document.getElementById(‘saved-meals’);
+const meals = AppState.meals.saved;
 
 ```
-task.text = document.getElementById('editTaskText').value.trim();
-task.category = document.getElementById('editTaskCategory').value;
-task.priority = document.getElementById('editTaskPriority').value;
-task.dueDate = document.getElementById('editTaskDueDate').value || null;
+if (meals.length === 0) {
+    container.innerHTML = '<p class="empty-state">No meals planned yet</p>';
+    return;
+}
 
-save();
-closeModal();
-router('habits');
+let html = '';
+meals.forEach(meal => {
+    html += `
+        <div class="meal-card">
+            <h3>${meal.name}</h3>
+            <p>Prep time: ${meal.time} minutes</p>
+            <button onclick="removeMeal(${meal.id})" style="background: rgba(239, 68, 68, 0.1); border-color: var(--color-danger); color: var(--color-danger);">
+                Remove
+            </button>
+        </div>
+    `;
+});
+
+container.innerHTML = html;
 ```
 
 }
 
-function addJournalFromModal() {
-const text = document.getElementById(‘modalJournalText’).value.trim();
-const mood = document.getElementById(‘selectedMood’).value;
+function removeMeal(id) {
+AppState.meals.saved = AppState.meals.saved.filter(m => m.id !== id);
+Storage.saveState();
+renderSavedMeals();
+renderDashboard();
+}
+
+/* ===================================
+ASSISTANT PAGE
+=================================== */
+
+function initAssistant() {
+const input = document.getElementById(‘terminal-input’);
+const clearBtn = document.getElementById(‘clear-terminal’);
 
 ```
-if(text) {
-    const date = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    store.journal.push({ 
-        id: Date.now(), 
-        date: date, 
-        text: text,
-        mood: mood,
-        timestamp: new Date().toISOString()
+input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        const command = input.value.trim();
+        if (command) {
+            processCommand(command);
+            input.value = '';
+        }
+    }
+});
+
+clearBtn.addEventListener('click', () => {
+    const output = document.getElementById('terminal-output');
+    output.innerHTML = `
+        <div class="terminal-line system">
+            <span class="prompt">system:</span>
+            <span>Life Dashboard Assistant v1.0</span>
+        </div>
+        <div class="terminal-line system">
+            <span class="prompt">system:</span>
+            <span>Type 'help' for available commands</span>
+        </div>
+    `;
+});
+```
+
+}
+
+function processCommand(command) {
+addTerminalLine(‘user’, command);
+
+```
+const cmd = command.toLowerCase().trim();
+
+// Command routing
+if (cmd === 'help') {
+    showHelp();
+} else if (cmd === 'status') {
+    showStatus();
+} else if (cmd.startsWith('tasks')) {
+    showTasks(cmd);
+} else if (cmd === 'budget') {
+    showBudgetSummary();
+} else if (cmd === 'meals') {
+    showMeals();
+} else if (cmd === 'clear') {
+    document.getElementById('clear-terminal').click();
+} else {
+    addTerminalLine('response', `Unknown command: "${command}". Type 'help' for available commands.`);
+}
+
+scrollTerminalToBottom();
+```
+
+}
+
+function addTerminalLine(type, content) {
+const output = document.getElementById(‘terminal-output’);
+const line = document.createElement(‘div’);
+line.className = `terminal-line ${type}`;
+
+```
+if (type === 'user') {
+    line.innerHTML = `<span class="prompt">you:</span><span>${content}</span>`;
+} else if (type === 'response') {
+    line.innerHTML = `<span class="prompt">assistant:</span><span>${content}</span>`;
+} else if (type === 'system') {
+    line.innerHTML = `<span class="prompt">system:</span><span>${content}</span>`;
+} else if (type === 'error') {
+    line.innerHTML = `<span class="prompt">error:</span><span>${content}</span>`;
+}
+
+output.appendChild(line);
+```
+
+}
+
+function scrollTerminalToBottom() {
+const output = document.getElementById(‘terminal-output’);
+output.scrollTop = output.scrollHeight;
+}
+
+function showHelp() {
+addTerminalLine(‘response’, ‘Available commands:’);
+addTerminalLine(‘system’, ’  help - Show this help message’);
+addTerminalLine(‘system’, ’  status - Show dashboard overview’);
+addTerminalLine(‘system’, ’  tasks [filter] - Show tasks (all/today/overdue)’);
+addTerminalLine(‘system’, ’  budget - Show budget summary’);
+addTerminalLine(‘system’, ’  meals - Show meal plan’);
+addTerminalLine(‘system’, ’  clear - Clear terminal’);
+}
+
+function showStatus() {
+const taskCount = AppState.tasks.filter(t => !t.completed).length;
+const overdueCount = AppState.tasks.filter(t => {
+if (t.completed) return false;
+const dueDate = new Date(t.dueDate);
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+return dueDate < today;
+}).length;
+
+```
+const totals = calculateBudgetTotals();
+const mealCount = AppState.meals.saved.length;
+
+addTerminalLine('response', '─── Dashboard Status ───');
+addTerminalLine('system', `Tasks: ${taskCount} active, ${overdueCount} overdue`);
+addTerminalLine('system', `Budget: ${formatCurrency(totals.remaining)} remaining`);
+addTerminalLine('system', `Meals: ${mealCount} planned`);
+```
+
+}
+
+function showTasks(cmd) {
+const parts = cmd.split(’ ’);
+const filter = parts[1] || ‘all’;
+
+```
+let tasks = [...AppState.tasks];
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+if (filter === 'today') {
+    tasks = tasks.filter(t => {
+        const taskDate = new Date(t.dueDate);
+        taskDate.setHours(0, 0, 0, 0);
+        return taskDate.getTime() === today.getTime();
     });
-    save();
-    closeModal();
-    router('journal');
-}
-```
-
-}
-
-function deleteJournalEntry(id) {
-if(confirm(“Delete this journal entry?”)) {
-store.journal = store.journal.filter(e => e.id !== id);
-save();
-router(‘journal’);
-}
-}
-
-function addGoalFromModal() {
-const title = document.getElementById(‘modalGoalTitle’).value.trim();
-const description = document.getElementById(‘modalGoalDescription’).value.trim();
-const category = document.getElementById(‘modalGoalCategory’).value;
-const target = parseInt(document.getElementById(‘modalGoalTarget’).value);
-const current = parseInt(document.getElementById(‘modalGoalCurrent’).value);
-const deadline = document.getElementById(‘modalGoalDeadline’).value || null;
-
-```
-if(title && target > 0) {
-    store.goals.push({
-        id: Date.now(),
-        title: title,
-        description: description,
-        category: category,
-        target: target,
-        current: current,
-        deadline: deadline
+} else if (filter === 'overdue') {
+    tasks = tasks.filter(t => {
+        const taskDate = new Date(t.dueDate);
+        return taskDate < today && !t.completed;
     });
-    save();
-    closeModal();
-    router('goals');
 }
+
+tasks = tasks.filter(t => !t.completed);
+
+if (tasks.length === 0) {
+    addTerminalLine('response', `No ${filter} tasks found`);
+    return;
+}
+
+addTerminalLine('response', `─── ${filter.toUpperCase()} Tasks (${tasks.length}) ───`);
+tasks.forEach(task => {
+    const dueDate = new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    addTerminalLine('system', `[${task.priority.toUpperCase()}] ${task.name} - Due: ${dueDate}`);
+});
 ```
 
 }
 
-function updateGoalProgress(id, delta) {
-const goal = store.goals.find(g => g.id === id);
-if (goal) {
-goal.current = Math.max(0, Math.min(goal.target, goal.current + delta));
-save();
-router(‘goals’);
-}
+function showBudgetSummary() {
+const totals = calculateBudgetTotals();
+
+```
+addTerminalLine('response', '─── Budget Summary ───');
+addTerminalLine('system', `Income: ${formatCurrency(totals.income)}`);
+addTerminalLine('system', `Expenses: ${formatCurrency(totals.expenses)}`);
+addTerminalLine('system', `Remaining: ${formatCurrency(totals.remaining)}`);
+```
+
 }
 
-function deleteGoal(id) {
-if(confirm(“Delete this goal?”)) {
-store.goals = store.goals.filter(g => g.id !== id);
-save();
-router(‘goals’);
-}
+function showMeals() {
+const meals = AppState.meals.saved;
+
+```
+if (meals.length === 0) {
+    addTerminalLine('response', 'No meals planned');
+    return;
 }
 
-function addCategory() {
-const input = document.getElementById(‘newCategory’);
-const name = input.value.trim();
-if (name && !store.categories.includes(name)) {
-store.categories.push(name);
-input.value = ‘’;
-save();
-router(‘settings’);
-}
+addTerminalLine('response', `─── Meal Plan (${meals.length}) ───`);
+meals.forEach(meal => {
+    addTerminalLine('system', `${meal.name} - ${meal.time} minutes`);
+});
+```
+
 }
 
-function deleteCategory(name) {
-if(confirm(`Delete category "${name}"?`)) {
-store.categories = store.categories.filter(c => c !== name);
-save();
-router(‘settings’);
-}
+/* ===================================
+UTILITY FUNCTIONS
+=================================== */
+
+function showNotification(message) {
+// Simple notification - could be enhanced with a proper notification UI
+const notification = document.createElement(‘div’);
+notification.style.cssText = `position: fixed; top: 80px; right: 20px; background: var(--bg-elevated); border: 1px solid var(--accent-emerald); color: var(--accent-emerald); padding: var(--spacing-md) var(--spacing-lg); border-radius: 8px; box-shadow: var(--glow-emerald); z-index: 1001; animation: slideIn 0.3s ease;`;
+notification.textContent = message;
+
+```
+document.body.appendChild(notification);
+
+setTimeout(() => {
+    notification.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => notification.remove(), 300);
+}, 3000);
+```
+
 }
 
-function exportData() {
-const dataStr = JSON.stringify(store, null, 2);
-const dataBlob = new Blob([dataStr], {type: ‘application/json’});
-const url = URL.createObjectURL(dataBlob);
-const link = document.createElement(‘a’);
-link.href = url;
-link.download = `jordy-life-os-backup-${new Date().toISOString().split('T')[0]}.json`;
-link.click();
-URL.revokeObjectURL(url);
-}
+// Add slide animations
+const style = document.createElement(‘style’);
+style.textContent = `@keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } } @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(400px); opacity: 0; } }`;
+document.head.appendChild(style);
 
-function importDataPrompt() {
-const input = document.createElement(‘input’);
-input.type = ‘file’;
-input.accept = ‘application/json’;
-input.onchange = (e) => {
-const file = e.target.files[0];
-const reader = new FileReader();
-reader.onload = (event) => {
-try {
-const imported = JSON.parse(event.target.result);
-if(confirm(“This will replace all current data. Continue?”)) {
-Object.assign(store, imported);
-save();
-location.reload();
-}
-} catch(err) {
-alert(“Invalid JSON file”);
-}
-};
-reader.readAsText(file);
-};
-input.click();
-}
+/* ===================================
+INITIALIZATION
+=================================== */
 
-function clearData() {
-if(confirm(“Are you sure? This will delete ALL your data permanently.”)) {
-if(confirm(“Last chance! This action cannot be undone.”)) {
-localStorage.removeItem(‘havenData’);
-location.reload();
-}
-}
-}
+document.addEventListener(‘DOMContentLoaded’, () => {
+// Load saved state from LocalStorage
+Storage.loadState();
 
-// — 7. INITIALIZATION —
-loadData();
-router(‘home’);
+```
+// Initialize all modules
+initNavigation();
+initDashboard();
+initBudget();
+initTasks();
+initMeals();
+initAssistant();
+
+// Render initial page
+renderDashboard();
+renderSavedMeals();
+
+// Auto-save on page unload
+window.addEventListener('beforeunload', () => {
+    Storage.saveState();
+});
+
+console.log('Life Dashboard initialized');
+```
+
+});
