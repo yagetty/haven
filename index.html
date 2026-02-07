@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haven</title>
+    <style>
+        /* BASIC RESET & FONTS */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #FDFBF7; /* Warm Cream */
+            color: #1D1D1F;
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        /* COLORS */
+        :root {
+            --bg: #FDFBF7;
+            --surface: #FFFFFF;
+            --primary: #1D1D1F;
+            --secondary: #86868B;
+            --clay: #E07A5F;
+            --sage: #81B29A;
+            --border: #E5E5EA;
+        }
+
+        /* LAYOUT */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 { font-size: 24px; font-weight: 600; }
+        h2 { font-size: 14px; color: var(--secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+
+        /* CARDS */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        }
+
+        /* GRID */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        /* SPECIFIC COMPONENTS */
+        .badge {
+            background: #FFF0ED;
+            color: var(--clay);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .progress-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: conic-gradient(var(--sage) 75%, #F4F2EE 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .progress-inner {
+            width: 60px;
+            height: 60px;
+            background: var(--surface);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* DESKTOP TWEAKS */
+        @media (min-width: 768px) {
+            .grid { grid-template-columns: 2fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <div>
+                <h2>Good Morning</h2>
+                <h1>Haven Dashboard</h1>
+            </div>
+            <button class="btn">Focus Mode</button>
+        </header>
+
+        <div id="app">
+            <!-- JavaScript will put content here -->
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
