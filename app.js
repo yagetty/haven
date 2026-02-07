@@ -1,5 +1,5 @@
 // ========================================
-// JORDY LIFE OS - ENHANCED
+// JORDY LIFE OS - FINTECH EDITION
 // ========================================
 
 // — 1. STATE MANAGEMENT —
@@ -46,7 +46,7 @@ deadline: “2026-12-31”
 ],
 categories: [“Work”, “Personal”, “Health”, “Learning”, “Finance”],
 settings: {
-theme: “warm-minimal”,
+theme: “fintech-dark”,
 weekStartsOn: “monday”,
 notifications: true
 },
@@ -55,6 +55,10 @@ totalTasksCompleted: 0,
 currentStreak: 0,
 longestStreak: 0,
 journalEntries: 0
+},
+crypto: {
+bitcoin: { price: null, change24h: null, loading: true },
+solana: { price: null, change24h: null, loading: true }
 }
 };
 
@@ -76,7 +80,85 @@ function save() {
 localStorage.setItem(‘havenData’, JSON.stringify(store));
 }
 
-// — 2. UTILITY FUNCTIONS —
+// — 2. CRYPTO PRICE FETCHING —
+
+async function fetchCryptoPrices() {
+try {
+// Using CoinGecko API (no API key required for basic usage)
+const response = await fetch(‘https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,solana&vs_currencies=usd&include_24hr_change=true’);
+const data = await response.json();
+
+```
+    if (data.bitcoin) {
+        store.crypto.bitcoin = {
+            price: data.bitcoin.usd,
+            change24h: data.bitcoin.usd_24h_change,
+            loading: false
+        };
+    }
+    
+    if (data.solana) {
+        store.crypto.solana = {
+            price: data.solana.usd,
+            change24h: data.solana.usd_24h_change,
+            loading: false
+        };
+    }
+    
+    // Update display if on home page
+    if (document.getElementById('crypto-bitcoin')) {
+        updateCryptoDisplay();
+    }
+} catch (error) {
+    console.error('Error fetching crypto prices:', error);
+    store.crypto.bitcoin.loading = false;
+    store.crypto.solana.loading = false;
+}
+```
+
+}
+
+function updateCryptoDisplay() {
+// Update Bitcoin
+const btcCard = document.getElementById(‘crypto-bitcoin’);
+if (btcCard && !store.crypto.bitcoin.loading) {
+const priceEl = btcCard.querySelector(’.crypto-price’);
+const changeEl = btcCard.querySelector(’.crypto-change’);
+
+```
+    priceEl.textContent = `$${store.crypto.bitcoin.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    priceEl.classList.remove('crypto-loading');
+    
+    const change = store.crypto.bitcoin.change24h;
+    changeEl.textContent = `${change >= 0 ? '▲' : '▼'} ${Math.abs(change).toFixed(2)}%`;
+    changeEl.className = `crypto-change ${change >= 0 ? 'positive' : 'negative'}`;
+}
+
+// Update Solana
+const solCard = document.getElementById('crypto-solana');
+if (solCard && !store.crypto.solana.loading) {
+    const priceEl = solCard.querySelector('.crypto-price');
+    const changeEl = solCard.querySelector('.crypto-change');
+    
+    priceEl.textContent = `$${store.crypto.solana.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    priceEl.classList.remove('crypto-loading');
+    
+    const change = store.crypto.solana.change24h;
+    changeEl.textContent = `${change >= 0 ? '▲' : '▼'} ${Math.abs(change).toFixed(2)}%`;
+    changeEl.className = `crypto-change ${change >= 0 ? 'positive' : 'negative'}`;
+}
+```
+
+}
+
+// Refresh crypto prices every 60 seconds
+setInterval(() => {
+if (window.location.hash === ‘’ || window.location.hash === ‘#home’) {
+fetchCryptoPrices();
+}
+}, 60000);
+
+// — 3. UTILITY FUNCTIONS —
 
 function formatDate(dateString) {
 const date = new Date(dateString);
@@ -101,7 +183,6 @@ return “Good Evening”;
 }
 
 function calculateStreak() {
-// Simple streak calculation based on consecutive days with completed tasks
 const today = new Date().toDateString();
 const completedToday = store.tasks.some(t =>
 t.done && new Date(t.createdAt).toDateString() === today
@@ -128,7 +209,7 @@ return { total, done, pending, percent, todayTasks: todayTasks.length, todayDone
 
 }
 
-// — 3. RENDER FUNCTIONS —
+// — 4. RENDER FUNCTIONS —
 
 // Page: HOME / DASHBOARD
 function renderHome() {
@@ -141,12 +222,39 @@ const stats = getTaskStats();
 const streak = calculateStreak();
 
 app.innerHTML = `
+    <!-- Crypto Prices -->
+    <div class="crypto-grid">
+        <div class="crypto-card" id="crypto-bitcoin">
+            <div class="crypto-header">
+                <div class="crypto-icon">₿</div>
+                <div class="crypto-name">
+                    <div class="crypto-symbol">BTC</div>
+                    <div class="crypto-title">Bitcoin</div>
+                </div>
+            </div>
+            <div class="crypto-price crypto-loading">Loading...</div>
+            <div class="crypto-change">--</div>
+        </div>
+        
+        <div class="crypto-card" id="crypto-solana">
+            <div class="crypto-header">
+                <div class="crypto-icon">◎</div>
+                <div class="crypto-name">
+                    <div class="crypto-symbol">SOL</div>
+                    <div class="crypto-title">Solana</div>
+                </div>
+            </div>
+            <div class="crypto-price crypto-loading">Loading...</div>
+            <div class="crypto-change">--</div>
+        </div>
+    </div>
+
     <!-- Stats Overview -->
     <div class="card card-gradient">
-        <h3>Focus Pulse</h3>
-        <div style="font-size: 52px; font-weight: 700; margin: 20px 0;">${stats.percent}%</div>
-        <p style="opacity: 0.9;">Overall task completion rate</p>
-        <div class="progress-bar-container" style="margin-top: 20px;">
+        <h3>Focus Metrics</h3>
+        <div style="font-size: 56px; font-weight: 800; margin: 24px 0; font-family: 'Syne', sans-serif; background: linear-gradient(135deg, #00FF94 0%, #00D9FF 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${stats.percent}%</div>
+        <p style="opacity: 0.8; color: var(--text-secondary);">Task completion rate across all categories</p>
+        <div class="progress-bar-container" style="margin-top: 24px;">
             <div class="progress-bar" style="width: ${stats.percent}%;"></div>
         </div>
     </div>
@@ -177,8 +285,8 @@ app.innerHTML = `
     <!-- Quick Tasks -->
     <div class="card">
         <div class="flex-between mb-2">
-            <h3>Quick Tasks</h3>
-            <button class="btn-small btn-secondary" onclick="router('habits')">View All</button>
+            <h3>Active Tasks</h3>
+            <button class="btn-small btn-secondary" onclick="router('habits')">View All →</button>
         </div>
         ${renderQuickTasks()}
     </div>
@@ -187,8 +295,8 @@ app.innerHTML = `
     ${store.goals.length > 0 ? `
     <div class="card">
         <div class="flex-between mb-2">
-            <h3>Active Goals</h3>
-            <button class="btn-small btn-secondary" onclick="router('goals')">View All</button>
+            <h3>Goals Progress</h3>
+            <button class="btn-small btn-secondary" onclick="router('goals')">View All →</button>
         </div>
         ${renderGoalsPreview()}
     </div>
@@ -198,13 +306,16 @@ app.innerHTML = `
     ${store.journal.length > 0 ? `
     <div class="card">
         <div class="flex-between mb-2">
-            <h3>Latest Reflection</h3>
-            <button class="btn-small btn-secondary" onclick="router('journal')">View All</button>
+            <h3>Latest Entry</h3>
+            <button class="btn-small btn-secondary" onclick="router('journal')">View All →</button>
         </div>
         ${renderLatestJournal()}
     </div>
     ` : ''}
 `;
+
+// Fetch crypto prices
+fetchCryptoPrices();
 ```
 
 }
@@ -214,20 +325,20 @@ const incompleteTasks = store.tasks.filter(t => !t.done).slice(0, 5);
 
 ```
 if (incompleteTasks.length === 0) {
-    return '<div class="empty-state"><div class="empty-state-icon">✨</div><div class="empty-state-text">All caught up!</div></div>';
+    return '<div class="empty-state" style="padding: 40px 20px;"><div class="empty-state-icon">✨</div><div class="empty-state-text">All tasks complete</div></div>';
 }
 
 return incompleteTasks.map(task => `
     <div class="habit-row">
         <div class="habit-content">
-            <div class="habit-text" style="${task.done ? 'text-decoration: line-through; color: #ccc;' : ''}">${task.text}</div>
+            <div class="habit-text" style="${task.done ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${task.text}</div>
             <div class="habit-meta">
                 <span class="category-badge">${task.category}</span>
+                ${task.priority === 'high' ? '<span class="priority-badge priority-high">High</span>' : ''}
                 ${task.dueDate ? `<span>📅 ${formatDate(task.dueDate)}</span>` : ''}
             </div>
         </div>
         <div class="habit-actions">
-            ${task.priority === 'high' ? '<span class="priority-badge priority-high">High</span>' : ''}
             <div class="checkbox ${task.done ? 'checked' : ''}" onclick="toggleTask(${task.id}, 'home')">
                 ${task.done ? '✓' : ''}
             </div>
@@ -241,13 +352,13 @@ return incompleteTasks.map(task => `
 function renderGoalsPreview() {
 return store.goals.slice(0, 2).map(goal => {
 const progress = Math.round((goal.current / goal.target) * 100);
-return `<div class="goal-card"> <div class="goal-header"> <div> <div class="goal-title">${goal.title}</div> <div class="category-badge" style="margin-top: 4px;">${goal.category}</div> </div> </div> <div class="progress-bar-container"> <div class="progress-bar" style="width: ${progress}%;"></div> </div> <div class="goal-progress-text">${goal.current} / ${goal.target} completed (${progress}%)</div> </div>`;
+return `<div class="goal-card"> <div class="goal-header"> <div style="flex: 1;"> <div class="goal-title">${goal.title}</div> <div class="category-badge" style="margin-top: 8px; display: inline-block;">${goal.category}</div> </div> ${progress >= 100 ? '<div style="font-size: 32px;">✅</div>' : ''} </div> <div class="progress-bar-container"> <div class="progress-bar" style="width: ${Math.min(progress, 100)}%;"></div> </div> <div class="goal-progress-text">${goal.current} / ${goal.target} completed · ${progress}%</div> </div>`;
 }).join(’’);
 }
 
 function renderLatestJournal() {
 const latest = store.journal[store.journal.length - 1];
-return `<div class="journal-entry"> <div class="journal-header"> <span class="date-badge">${latest.date}</span> <span class="mood-indicator">${latest.mood || '📝'}</span> </div> <p class="journal-text">${latest.text.substring(0, 150)}${latest.text.length > 150 ? '...' : ''}</p> </div>`;
+return `<div class="journal-entry"> <div class="journal-header"> <span class="date-badge">${latest.date}</span> <span class="mood-indicator">${latest.mood || '📝'}</span> </div> <p class="journal-text">${latest.text.substring(0, 200)}${latest.text.length > 200 ? '...' : ''}</p> </div>`;
 }
 
 // Page: HABITS
@@ -256,13 +367,12 @@ let currentCategory = ‘all’;
 
 function renderHabits() {
 const app = document.getElementById(‘app’);
-document.getElementById(‘page-title’).innerText = “Habits & Tasks”;
+document.getElementById(‘page-title’).innerText = “Tasks & Habits”;
 document.getElementById(‘header-actions’).innerHTML = `<button class="header-btn" onclick="openAddTaskModal()">+ Add Task</button>`;
 
 ```
 const stats = getTaskStats();
 
-// Apply filters
 let filteredTasks = store.tasks;
 if (currentFilter === 'active') filteredTasks = filteredTasks.filter(t => !t.done);
 if (currentFilter === 'completed') filteredTasks = filteredTasks.filter(t => t.done);
@@ -273,11 +383,11 @@ app.innerHTML = `
     <div class="card">
         <div class="flex-between">
             <div>
-                <div style="font-size: 24px; font-weight: 700;">${stats.done} / ${stats.total}</div>
+                <div style="font-size: 28px; font-weight: 800; font-family: 'Syne', sans-serif;">${stats.done} / ${stats.total}</div>
                 <div class="text-muted text-small">Tasks Completed</div>
             </div>
             <div style="text-align: right;">
-                <div style="font-size: 24px; font-weight: 700;">${stats.percent}%</div>
+                <div style="font-size: 28px; font-weight: 800; font-family: 'Syne', sans-serif;">${stats.percent}%</div>
                 <div class="text-muted text-small">Completion Rate</div>
             </div>
         </div>
@@ -295,13 +405,13 @@ app.innerHTML = `
             Active (${store.tasks.filter(t => !t.done).length})
         </div>
         <div class="filter-chip ${currentFilter === 'completed' ? 'active' : ''}" onclick="filterTasks('completed')">
-            Completed (${store.tasks.filter(t => t.done).length})
+            Done (${store.tasks.filter(t => t.done).length})
         </div>
     </div>
 
     <div class="filter-bar">
         <div class="filter-chip ${currentCategory === 'all' ? 'active' : ''}" onclick="filterByCategory('all')">
-            All Categories
+            All
         </div>
         ${store.categories.map(cat => `
             <div class="filter-chip ${currentCategory === cat ? 'active' : ''}" onclick="filterByCategory('${cat}')">
@@ -327,9 +437,9 @@ return `<div class="empty-state"> <div class="empty-state-icon">📋</div> <div 
 ```
 return tasks.map(task => `
     <div class="card">
-        <div class="habit-row" style="border: none;">
+        <div class="habit-row" style="border: none; padding: 0;">
             <div class="habit-content">
-                <div class="habit-text" style="${task.done ? 'text-decoration: line-through; color: #ccc;' : ''}">${task.text}</div>
+                <div class="habit-text" style="${task.done ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${task.text}</div>
                 <div class="habit-meta">
                     <span class="category-badge">${task.category}</span>
                     ${task.priority !== 'low' ? `<span class="priority-badge priority-${task.priority}">${task.priority}</span>` : ''}
@@ -374,10 +484,10 @@ app.innerHTML = `
     <div class="card">
         <div class="flex-between">
             <div>
-                <div style="font-size: 24px; font-weight: 700;">${store.journal.length}</div>
+                <div style="font-size: 28px; font-weight: 800; font-family: 'Syne', sans-serif;">${store.journal.length}</div>
                 <div class="text-muted text-small">Total Entries</div>
             </div>
-            <div style="font-size: 32px;">📓</div>
+            <div style="font-size: 40px;">📓</div>
         </div>
     </div>
 
@@ -390,10 +500,10 @@ app.innerHTML = `
                 <div class="empty-state-subtext">Start writing to capture your thoughts</div>
             </div>
         ` : sortedJournal.map(entry => `
-            <div class="card journal-entry">
+            <div class="journal-entry">
                 <div class="journal-header">
                     <span class="date-badge">${entry.date}</span>
-                    <div style="display: flex; gap: 8px; align-items: center;">
+                    <div style="display: flex; gap: 12px; align-items: center;">
                         <span class="mood-indicator">${entry.mood || '📝'}</span>
                         <button class="btn-small btn-danger" onclick="deleteJournalEntry(${entry.id})">🗑️</button>
                     </div>
@@ -419,11 +529,11 @@ app.innerHTML = `
     <div class="card">
         <div class="flex-between">
             <div>
-                <div style="font-size: 24px; font-weight: 700;">${store.goals.length}</div>
+                <div style="font-size: 28px; font-weight: 800; font-family: 'Syne', sans-serif;">${store.goals.length}</div>
                 <div class="text-muted text-small">Active Goals</div>
             </div>
             <div>
-                <div style="font-size: 24px; font-weight: 700;">${store.goals.filter(g => (g.current/g.target) >= 1).length}</div>
+                <div style="font-size: 28px; font-weight: 800; font-family: 'Syne', sans-serif;">${store.goals.filter(g => (g.current/g.target) >= 1).length}</div>
                 <div class="text-muted text-small">Completed</div>
             </div>
         </div>
@@ -445,21 +555,21 @@ app.innerHTML = `
                     <div class="goal-header">
                         <div style="flex: 1;">
                             <div class="goal-title">${goal.title}</div>
-                            <div style="font-size: 14px; color: var(--gray-dark); margin-top: 4px;">${goal.description}</div>
-                            <div style="margin-top: 8px; display: flex; gap: 8px;">
+                            <div style="font-size: 13px; color: var(--text-secondary); margin-top: 6px;">${goal.description}</div>
+                            <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
                                 <span class="category-badge">${goal.category}</span>
                                 ${goal.deadline ? `<span class="text-small text-muted">📅 ${formatDate(goal.deadline)}</span>` : ''}
                             </div>
                         </div>
-                        ${isComplete ? '<div style="font-size: 32px;">✅</div>' : ''}
+                        ${isComplete ? '<div style="font-size: 40px;">✅</div>' : ''}
                     </div>
                     <div class="progress-bar-container">
                         <div class="progress-bar" style="width: ${Math.min(progress, 100)}%;"></div>
                     </div>
-                    <div class="flex-between" style="margin-top: 12px;">
-                        <div class="goal-progress-text">${goal.current} / ${goal.target} (${progress}%)</div>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="btn-small btn-secondary" onclick="updateGoalProgress(${goal.id}, -1)">-</button>
+                    <div class="flex-between" style="margin-top: 16px;">
+                        <div class="goal-progress-text">${goal.current} / ${goal.target} · ${progress}%</div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-small btn-secondary" onclick="updateGoalProgress(${goal.id}, -1)">−</button>
                             <button class="btn-small btn-secondary" onclick="updateGoalProgress(${goal.id}, 1)">+</button>
                             <button class="btn-small btn-danger" onclick="deleteGoal(${goal.id})">🗑️</button>
                         </div>
@@ -484,17 +594,17 @@ app.innerHTML = `
     <div class="card">
         <h3>Categories</h3>
         <p class="text-muted text-small mb-2">Manage your task categories</p>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
             ${store.categories.map(cat => `
-                <span class="category-badge" style="display: flex; align-items: center; gap: 6px;">
+                <span class="category-badge" style="display: flex; align-items: center; gap: 8px; padding: 8px 14px;">
                     ${cat}
-                    <span onclick="deleteCategory('${cat}')" style="cursor: pointer; opacity: 0.6;">×</span>
+                    <span onclick="deleteCategory('${cat}')" style="cursor: pointer; opacity: 0.7; font-size: 16px;">×</span>
                 </span>
             `).join('')}
         </div>
-        <div style="display: flex; gap: 8px;">
-            <input type="text" id="newCategory" placeholder="New category name..." style="margin: 0;">
-            <button class="btn btn-small" onclick="addCategory()" style="width: auto; padding: 12px 24px;">Add</button>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="newCategory" placeholder="New category name..." style="margin: 0; flex: 1;">
+            <button class="btn btn-small" onclick="addCategory()" style="width: auto; padding: 14px 24px;">Add</button>
         </div>
     </div>
 
@@ -503,19 +613,19 @@ app.innerHTML = `
         <div class="card-grid">
             <div class="stat-card">
                 <div class="stat-number">${store.stats.totalTasksCompleted}</div>
-                <div class="stat-label">Total Completed</div>
+                <div class="stat-label">Completed</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number">${store.stats.currentStreak}</div>
-                <div class="stat-label">Current Streak</div>
+                <div class="stat-label">Streak</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number">${store.stats.longestStreak}</div>
-                <div class="stat-label">Longest Streak</div>
+                <div class="stat-label">Best Streak</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number">${store.journal.length}</div>
-                <div class="stat-label">Journal Entries</div>
+                <div class="stat-label">Entries</div>
             </div>
         </div>
     </div>
@@ -530,15 +640,16 @@ app.innerHTML = `
 
     <div class="card">
         <h3>About</h3>
-        <p class="text-muted text-small">Jordy Life OS v2.0</p>
-        <p class="text-muted text-small">Built for productivity and mindfulness</p>
+        <p class="text-muted text-small">Jordy Life OS · Fintech Edition</p>
+        <p class="text-muted text-small">Built for productivity and focus</p>
+        <p class="text-muted text-small" style="margin-top: 12px;">Powered by CoinGecko API</p>
     </div>
 `;
 ```
 
 }
 
-// — 4. MODAL FUNCTIONS —
+// — 5. MODAL FUNCTIONS —
 
 function openAddTaskModal() {
 const modal = `<div class="modal-overlay" onclick="closeModal(event)"> <div class="modal" onclick="event.stopPropagation()"> <div class="modal-header"> <div class="modal-title">Add New Task</div> </div> <div class="modal-body"> <div class="form-group"> <label class="form-label">Task Name</label> <input type="text" id="modalTaskText" placeholder="What needs to be done?"> </div> <div class="form-group"> <label class="form-label">Category</label> <select id="modalTaskCategory"> ${store.categories.map(cat =>`<option value="${cat}">${cat}</option>`).join('')} </select> </div> <div class="form-group"> <label class="form-label">Priority</label> <select id="modalTaskPriority"> <option value="low">Low</option> <option value="medium" selected>Medium</option> <option value="high">High</option> </select> </div> <div class="form-group"> <label class="form-label">Due Date (Optional)</label> <input type="date" id="modalTaskDueDate"> </div> </div> <div class="modal-footer"> <button class="btn btn-secondary" onclick="closeModal()">Cancel</button> <button class="btn" onclick="addTaskFromModal()">Add Task</button> </div> </div> </div> `;
@@ -546,7 +657,7 @@ document.getElementById(‘modal-container’).innerHTML = modal;
 }
 
 function openAddJournalModal() {
-const modal = `<div class="modal-overlay" onclick="closeModal(event)"> <div class="modal" onclick="event.stopPropagation()"> <div class="modal-header"> <div class="modal-title">New Journal Entry</div> </div> <div class="modal-body"> <div class="form-group"> <label class="form-label">How are you feeling?</label> <div style="display: flex; gap: 12px; font-size: 32px; margin-bottom: 16px;"> <span onclick="selectMood('😊')" style="cursor: pointer; opacity: 0.5;" class="mood-option">😊</span> <span onclick="selectMood('😐')" style="cursor: pointer; opacity: 0.5;" class="mood-option">😐</span> <span onclick="selectMood('😔')" style="cursor: pointer; opacity: 0.5;" class="mood-option">😔</span> <span onclick="selectMood('😤')" style="cursor: pointer; opacity: 0.5;" class="mood-option">😤</span> <span onclick="selectMood('🤔')" style="cursor: pointer; opacity: 0.5;" class="mood-option">🤔</span> <span onclick="selectMood('🎉')" style="cursor: pointer; opacity: 0.5;" class="mood-option">🎉</span> </div> <input type="hidden" id="selectedMood" value="📝"> </div> <div class="form-group"> <label class="form-label">Your Thoughts</label> <textarea id="modalJournalText" rows="8" placeholder="What's on your mind today?"></textarea> </div> </div> <div class="modal-footer"> <button class="btn btn-secondary" onclick="closeModal()">Cancel</button> <button class="btn" onclick="addJournalFromModal()">Save Entry</button> </div> </div> </div>`;
+const modal = `<div class="modal-overlay" onclick="closeModal(event)"> <div class="modal" onclick="event.stopPropagation()"> <div class="modal-header"> <div class="modal-title">New Journal Entry</div> </div> <div class="modal-body"> <div class="form-group"> <label class="form-label">How are you feeling?</label> <div class="mood-selector"> <span onclick="selectMood('😊')" class="mood-option">😊</span> <span onclick="selectMood('😐')" class="mood-option">😐</span> <span onclick="selectMood('😔')" class="mood-option">😔</span> <span onclick="selectMood('😤')" class="mood-option">😤</span> <span onclick="selectMood('🤔')" class="mood-option">🤔</span> <span onclick="selectMood('🎉')" class="mood-option">🎉</span> </div> <input type="hidden" id="selectedMood" value="📝"> </div> <div class="form-group"> <label class="form-label">Your Thoughts</label> <textarea id="modalJournalText" rows="8" placeholder="What's on your mind today?"></textarea> </div> </div> <div class="modal-footer"> <button class="btn btn-secondary" onclick="closeModal()">Cancel</button> <button class="btn" onclick="addJournalFromModal()">Save Entry</button> </div> </div> </div>`;
 document.getElementById(‘modal-container’).innerHTML = modal;
 }
 
@@ -558,7 +669,11 @@ document.getElementById(‘modal-container’).innerHTML = modal;
 function selectMood(mood) {
 document.getElementById(‘selectedMood’).value = mood;
 document.querySelectorAll(’.mood-option’).forEach(el => {
-el.style.opacity = el.innerText === mood ? ‘1’ : ‘0.5’;
+if (el.innerText === mood) {
+el.classList.add(‘selected’);
+} else {
+el.classList.remove(‘selected’);
+}
 });
 }
 
@@ -567,10 +682,9 @@ if (event && event.target.className !== ‘modal-overlay’) return;
 document.getElementById(‘modal-container’).innerHTML = ‘’;
 }
 
-// — 5. ACTION FUNCTIONS —
+// — 6. ACTION FUNCTIONS —
 
 function router(page) {
-// Update Navbar UI
 document.querySelectorAll(’.nav-item’).forEach(el => el.classList.remove(‘active’));
 const icons = document.querySelectorAll(’.nav-item’);
 const pages = [‘home’, ‘habits’, ‘journal’, ‘goals’, ‘settings’];
@@ -578,14 +692,12 @@ const index = pages.indexOf(page);
 if (index !== -1) icons[index].classList.add(‘active’);
 
 ```
-// Render Page
 if(page === 'home') renderHome();
 if(page === 'habits') renderHabits();
 if(page === 'journal') renderJournal();
 if(page === 'goals') renderGoals();
 if(page === 'settings') renderSettings();
 
-// Scroll to top
 window.scrollTo(0, 0);
 ```
 
@@ -788,7 +900,7 @@ router(‘settings’);
 }
 
 function deleteCategory(name) {
-if(confirm(`Delete category "${name}"? Tasks with this category will be kept but need reassignment.`)) {
+if(confirm(`Delete category "${name}"?`)) {
 store.categories = store.categories.filter(c => c !== name);
 save();
 router(‘settings’);
@@ -839,6 +951,6 @@ location.reload();
 }
 }
 
-// — 6. INITIALIZATION —
+// — 7. INITIALIZATION —
 loadData();
 router(‘home’);
