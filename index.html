@@ -1,41 +1,56 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Budget Dashboard</title>
+  <title>Budget App</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <link rel="manifest" href="manifest.json">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
-  <div class="container">
 
-    <h1>Monthly Budget</h1>
+<div class="topbar">
+  <button onclick="prevMonth()">◀</button>
+  <h2 id="monthLabel"></h2>
+  <button onclick="nextMonth()">▶</button>
+  <button onclick="toggleDark()">🌙</button>
+</div>
 
-    <div class="dashboard">
-      <div class="card">
-        <h2>Income</h2>
-        <p id="income">£0</p>
-      </div>
-
-      <div class="card">
-        <h2>Bills</h2>
-        <p id="bills">£0</p>
-      </div>
-
-      <div class="card highlight">
-        <h2>Money Left</h2>
-        <p id="left">£0</p>
-      </div>
-    </div>
-
-    <div class="form">
-      <input id="incomeInput" placeholder="Enter income">
-      <input id="billsInput" placeholder="Enter bills">
-      <button onclick="saveBudget()">Save Month</button>
-    </div>
-
+<div class="dashboard">
+  <div class="card">
+    <h3>Income</h3>
+    <p id="income">£0</p>
   </div>
+  <div class="card">
+    <h3>Bills</h3>
+    <p id="bills">£0</p>
+  </div>
+  <div class="card highlight">
+    <h3>Money Left</h3>
+    <p id="left">£0</p>
+  </div>
+</div>
 
-  <script src="app.js"></script>
+<input id="incomeInput" placeholder="Income">
+<button onclick="saveIncome()">Save Income</button>
+
+<h3>Add Bill</h3>
+<input id="billName" placeholder="Bill">
+<input id="billAmount" placeholder="Amount">
+<label><input type="checkbox" id="recurring"> Recurring</label>
+<button onclick="addBill()">Add</button>
+
+<ul id="billList"></ul>
+
+<canvas id="chart"></canvas>
+
+<script src="app.js"></script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js');
+}
+</script>
+
 </body>
 </html>

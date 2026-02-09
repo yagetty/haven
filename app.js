@@ -1,47 +1,117 @@
-const SUPABASE_URL = "https://caqaigfhortcsbwmkhns.supabase.co";
-const SUPABASE_KEY = "sb_publishable_Z0K7D_T_yqF86FmESMXvcw_UZM-4yn2";
+let offset = 0;
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-function currentMonth() {
+function getMonth(offset=0) {
   const d = new Date();
+  d.setMonth(d.getMonth()+offset);
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 }
 
-async function loadBudget() {
-  const month = currentMonth();
+function loadData() {
+  return JSON.parse(localStorage.getItem("budget") || "{}");
+}
 
-  const { data } = await supabase
-    .from("budgets")
-    .select("*")
-    .eq("month", month)
-    .single();
+function saveData(d) {
+  localStorage.setItem("budget", JSON.stringify(d));
+}
 
-  if (data) {
-    display(data.income, data.bills);
+function initMonth() {
+  const data = loadData();
+  const m = getMonth(offset);
+
+  if (!data[m]) {
+    const prev = getMonth(offset-1);
+    const recurring = data[prev]?.bills?.filter(b=>b.recurring) || [];
+    data[m] = { income:0, bills:[...recurring] };
+    saveData(data);
   }
 }
 
-function display(income, bills) {
-  const left = income - bills;
-
-  document.getElementById("income").innerText = `£${income}`;
-  document.getElementById("bills").innerText = `£${bills}`;
-  document.getElementById("left").innerText = `£${left}`;
+function saveIncome() {
+  const data = loadData();
+  data[getMonth(offset)].income = Number(incomeInput.value);
+  saveData(data);
+  render();
 }
 
-async function saveBudget() {
-  const income = Number(document.getElementById("incomeInput").value);
-  const bills = Number(document.getElementById("billsInput").value);
-  const month = currentMonth();
+function addBill() {
+  const data = loadData();
+  data[getMonth(offset)].bills.push({
+    name: billName.value,
+    amount: Number(billAmount.value),
+    recurring: recurring.checked
+  });
+  saveData(data);
+  render();
+}
 
-  await supabase.from("budgets").upsert({
-    month,
-    income,
-    bills
+function deleteBill(i) {
+  const data = loadData();
+  data[getMonth(offset)].bills.splice(i,1);
+  saveData(data);
+  render();
+}
+
+function editBill(i) {
+  const data = loadData();
+  const b = data[getMonth(offset)].bills[i];
+  const name = prompt("Edit name", b.name);
+  const amount = prompt("Edit amount", b.amount);
+  b.name = name;
+  b.amount = Number(amount);
+  saveData(data);
+  render();
+}
+
+let chart;
+
+function render() {
+  initMonth();
+  const data = loadData()[getMonth(offset)];
+
+  monthLabel.innerText = getMonth(offset);
+
+  let total = 0;
+  billList.innerHTML = "";
+
+  data.bills.forEach((b,i)=>{
+    total += b.amount;
+    const li = document.createElement("li");
+    li.innerHTML =
+      `${b.name} £${b.amount}
+       <span>
+         <button onclick="editBill(${i})">✏</button>
+         <button onclick="deleteBill(${i})">🗑</button>
+       </span>`;
+    billList.appendChild(li);
   });
 
-  display(income, bills);
+  income.innerText = `£${data.income}`;
+  bills.innerText = `£${total}`;
+  left.innerText = `£${data.income-total}`;
+
+  const chartData = {
+    labels:["Left","Bills"],
+    datasets:[{
+      data:[data.income-total,total],
+      backgroundColor:["#34c759","#ff3b30"]
+    }]
+  };
+
+  if(chart) chart.destroy();
+  chart = new Chart(document.getElementById("chart"), {
+    type:"doughnut",
+    data:chartData
+  });
 }
 
-loadBudget();
+function prevMonth(){ offset--; render(); }
+function nextMonth(){ offset++; render(); }
+
+function toggleDark(){
+  document.body.classList.toggle("dark");
+  localStorage.setItem("dark",document.body.classList.contains("dark"));
+}
+
+if(localStorage.getItem("dark")==="true") toggleDark();
+
+render();
