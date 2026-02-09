@@ -1,58 +1,83 @@
 <!DOCTYPE html>
-<html>
+
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Budget AI</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BUDGET.SYS // NEXUS-7</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<header>
-<h2 id="monthLabel"></h2>
-<div class="nav">
-<button onclick="prevMonth()">◀</button>
-<button onclick="nextMonth()">▶</button>
-<a href="year.html">YEAR</a>
-</div>
-</header>
+  <header>
+    <h2 id="monthLabel">LOADING...</h2>
+    <nav class="nav">
+      <button onclick="prevMonth()">◀ PREV</button>
+      <button onclick="nextMonth()">NEXT ▶</button>
+      <a href="year.html">YEAR VIEW</a>
+    </nav>
+  </header>
 
-<section class="cards">
+  <section class="cards">
+
+```
+<div class="card">
+  <h3>/// Income</h3>
+  <p id="income">£0</p>
+</div>
 
 <div class="card">
-<h3>Income</h3>
-<p id="income">£0</p>
-</div>
-
-<div class="card">
-<h3>Bills</h3>
-<p id="bills">£0</p>
+  <h3>/// Expenses</h3>
+  <p id="bills">£0</p>
 </div>
 
 <div class="card accent">
-<h3>Money Left</h3>
-<p id="left">£0</p>
-<div class="bar"><div id="leftBar"></div></div>
+  <h3>/// Available</h3>
+  <p id="left">£0</p>
+  <div class="bar">
+    <div id="leftBar"></div>
+  </div>
 </div>
+```
 
-</section>
+  </section>
 
-<section class="inputs">
+  <section class="inputs">
 
-<input id="incomeInput" placeholder="Income">
-<button onclick="saveIncome()">Save Income</button>
+```
+<input 
+  id="incomeInput" 
+  type="number" 
+  placeholder="Enter income amount"
+  step="0.01">
+<button onclick="saveIncome()">Update Income</button>
 
-<input id="billName" placeholder="Bill name">
-<input id="billAmount" placeholder="Amount">
-<label><input type="checkbox" id="recurring"> Recurring</label>
-<button onclick="addBill()">Add Bill</button>
+<input 
+  id="billName" 
+  type="text" 
+  placeholder="Bill description">
+<input 
+  id="billAmount" 
+  type="number" 
+  placeholder="Amount"
+  step="0.01">
 
-</section>
+<label>
+  <input type="checkbox" id="recurring">
+  <span>Recurring monthly</span>
+</label>
 
-<ul id="billList"></ul>
+<button onclick="addBill()">Add Expense</button>
+```
 
-<div id="aiAdvice" class="ai"></div>
+  </section>
 
-<script src="app.js"></script>
+  <ul id="billList"></ul>
+
+  <div id="aiAdvice" class="ai">SYSTEM INITIALIZING...</div>
+
+  <script src="app.js"></script>
+
 </body>
 </html>

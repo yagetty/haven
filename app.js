@@ -1,117 +1,170 @@
-let offset=0;
-
-function m(o=0){
-const d=new Date();
-d.setMonth(d.getMonth()+o);
-return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+// State management
+const state = {
+offset: 0,
+get currentMonth() {
+const d = new Date();
+d.setMonth(d.getMonth() + this.offset);
+return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
+};
 
-function load(){return JSON.parse(localStorage.getItem("budget")||"{}");}
-function save(d){localStorage.setItem("budget",JSON.stringify(d));}
+// Storage utilities
+const storage = {
+load: () => JSON.parse(localStorage.getItem(“budget”) || “{}”),
+save: (data) => localStorage.setItem(“budget”, JSON.stringify(data))
+};
 
-function init(){
-const d=load(),mo=m(offset);
-if(!d[mo]){
-const prev=m(offset-1);
-const rec=d[prev]?.bills?.filter(b=>b.recurring)||[];
-d[mo]={income:0,bills:[...rec]};
-save(d);
+// Month utilities
+const getMonth = (offset) => {
+const d = new Date();
+d.setMonth(d.getMonth() + offset);
+return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+};
+
+// Initialize month data
+const initMonth = () => {
+const data = storage.load();
+const currentMonth = state.currentMonth;
+
+if (!data[currentMonth]) {
+const prevMonth = getMonth(state.offset - 1);
+const recurringBills = data[prevMonth]?.bills?.filter(b => b.recurring) || [];
+data[currentMonth] = {
+income: 0,
+bills: […recurringBills]
+};
+storage.save(data);
 }
-}
+};
 
-function clear(id){document.getElementById(id).value="";}
+// AI Advice generator
+const getAdvice = (income, remaining) => {
+if (income === 0) return “⚠ SYSTEM AWAITING INCOME DATA”;
+if (remaining < 0) return “⛔ CRITICAL: EXPENDITURE EXCEEDS INCOME”;
+if (remaining < income * 0.1) return “⚠ WARNING: BUFFER CRITICALLY LOW”;
+if (remaining > income * 0.4) return “✓ OPTIMAL: FINANCIAL TRAJECTORY STABLE”;
+return “◆ SYSTEM NOMINAL”;
+};
 
-function saveIncome(){
-const d=load();
-d[m(offset)].income=Number(incomeInput.value||0);
-save(d);
-clear("incomeInput");
+// Actions
+const saveIncome = () => {
+const data = storage.load();
+const input = document.getElementById(‘incomeInput’);
+data[state.currentMonth].income = Number(input.value || 0);
+storage.save(data);
+input.value = ‘’;
 render();
-}
+};
 
-function addBill(){
-const d=load();
-d[m(offset)].bills.push({
-name:billName.value,
-amount:Number(billAmount.value||0),
-recurring:recurring.checked
+const addBill = () => {
+const data = storage.load();
+const nameInput = document.getElementById(‘billName’);
+const amountInput = document.getElementById(‘billAmount’);
+const recurringCheckbox = document.getElementById(‘recurring’);
+
+if (!nameInput.value || !amountInput.value) return;
+
+data[state.currentMonth].bills.push({
+name: nameInput.value,
+amount: Number(amountInput.value || 0),
+recurring: recurringCheckbox.checked
 });
-save(d);
-clear("billName");
-clear("billAmount");
+
+storage.save(data);
+nameInput.value = ‘’;
+amountInput.value = ‘’;
+recurringCheckbox.checked = false;
+render();
+};
+
+const deleteBill = (index) => {
+const data = storage.load();
+data[state.currentMonth].bills.splice(index, 1);
+storage.save(data);
+render();
+};
+
+const prevMonth = () => {
+state.offset–;
+render();
+};
+
+const nextMonth = () => {
+state.offset++;
+render();
+};
+
+// Main render function
+const render = () => {
+initMonth();
+const data = storage.load()[state.currentMonth];
+
+// Update month label
+document.getElementById(‘monthLabel’).textContent = state.currentMonth;
+
+// Calculate totals
+const totalBills = data.bills.reduce((sum, bill) => sum + bill.amount, 0);
+let remaining = data.income - totalBills;
+
+// Guard: prevent negative display when no income set
+if (data.income === 0) remaining = 0;
+
+// Update UI
+document.getElementById(‘income’).textContent = `£${data.income.toLocaleString()}`;
+document.getElementById(‘bills’).textContent = `£${totalBills.toLocaleString()}`;
+document.getElementById(‘left’).textContent = `£${remaining.toLocaleString()}`;
+
+// Update progress bar
+const barWidth = data.income ? (remaining / data.income) * 100 : 0;
+document.getElementById(‘leftBar’).style.width = `${Math.max(0, barWidth)}%`;
+
+// Render bills list
+const billList = document.getElementById(‘billList’);
+billList.innerHTML = data.bills.map((bill, index) => `<li class="bill-item"> <div class="bill-info"> <span class="bill-name">${bill.name}</span> <span class="bill-amount">£${bill.amount.toLocaleString()}</span> </div> <button onclick="deleteBill(${index})" class="delete-btn">×</button> </li>`).join(’’);
+
+// Update AI advice
+document.getElementById(‘aiAdvice’).textContent = getAdvice(data.income, remaining);
+};
+
+// Year view renderer
+const renderYear = () => {
+const data = storage.load();
+let totalIncome = 0;
+let totalBills = 0;
+
+const monthCards = Object.keys(data).sort().map(month => {
+const monthData = data[month];
+const billsTotal = monthData.bills.reduce((sum, bill) => sum + bill.amount, 0);
+let remaining = monthData.income - billsTotal;
+
+```
+if (monthData.income === 0) remaining = 0;
+
+totalIncome += monthData.income;
+totalBills += billsTotal;
+
+return `
+  <div class="card year-card">
+    <h3>${month}</h3>
+    <div class="year-stat">Income <span>£${monthData.income.toLocaleString()}</span></div>
+    <div class="year-stat">Bills <span>£${billsTotal.toLocaleString()}</span></div>
+    <div class="year-stat highlight">Left <span>£${remaining.toLocaleString()}</span></div>
+  </div>
+`;
+```
+
+}).join(’’);
+
+const summaryCard = `<div class="card accent year-summary"> <h3>ANNUAL SUMMARY</h3> <div class="year-stat">Total Income <span>£${totalIncome.toLocaleString()}</span></div> <div class="year-stat">Total Bills <span>£${totalBills.toLocaleString()}</span></div> <div class="year-stat highlight">Total Saved <span>£${(totalIncome - totalBills).toLocaleString()}</span></div> </div>`;
+
+document.getElementById(‘yearStats’).innerHTML = monthCards + summaryCard;
+};
+
+// Initialize on load
+document.addEventListener(‘DOMContentLoaded’, () => {
+if (document.getElementById(‘yearStats’)) {
+renderYear();
+} else {
 render();
 }
-
-function advice(i,l){
-if(i===0)return"Income not detected. Awaiting input.";
-if(l<0)return"Warning: expenditure exceeds safe threshold.";
-if(l<i*0.1)return"Buffer critically low. Adjust behaviour.";
-if(l>i*0.4)return"Surplus strong. Financial trajectory optimal.";
-return"System stable. Continue current pattern.";
-}
-
-function render(){
-init();
-const d=load()[m(offset)];
-monthLabel.innerText=m(offset);
-
-let total=0;
-billList.innerHTML="";
-
-d.bills.forEach((b,i)=>{
-total+=b.amount;
-const li=document.createElement("li");
-li.innerHTML=`${b.name} £${b.amount}
-<button onclick="dlt(${i})">✕</button>`;
-billList.appendChild(li);
 });
-
-const left=Math.max(0,d.income-total);
-
-income.innerText=`£${d.income}`;
-bills.innerText=`£${total}`;
-left.innerText=`£${left}`;
-
-leftBar.style.width=d.income?((left/d.income)*100)+"%":"0%";
-
-aiAdvice.innerText=advice(d.income,left);
-}
-
-function dlt(i){
-const d=load();
-d[m(offset)].bills.splice(i,1);
-save(d);
-render();
-}
-
-function prevMonth(){offset--;render();}
-function nextMonth(){offset++;render();}
-
-render();
-
-function renderYear(){
-const data=load();
-let html="",ti=0,tb=0;
-
-for(const k in data){
-let b=0;
-data[k].bills.forEach(x=>b+=x.amount);
-ti+=data[k].income;
-tb+=b;
-
-html+=`<div class="card">
-<h3>${k}</h3>
-Income £${data[k].income}<br>
-Bills £${b}<br>
-Left £${data[k].income-b}
-</div>`;
-}
-
-html+=`<div class="card accent">
-Year Income £${ti}<br>
-Year Bills £${tb}<br>
-Saved £${ti-tb}
-</div>`;
-
-document.getElementById("yearStats").innerHTML=html;
-}
