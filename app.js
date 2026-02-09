@@ -14,7 +14,7 @@ const d=load(),mo=m(offset);
 if(!d[mo]){
 const prev=m(offset-1);
 const rec=d[prev]?.bills?.filter(b=>b.recurring)||[];
-d[mo]={income:0,bills:[...rec],goal:0};
+d[mo]={income:0,bills:[...rec]};
 save(d);
 }
 }
@@ -42,20 +42,12 @@ clear("billAmount");
 render();
 }
 
-function setGoal(){
-const d=load();
-d[m(offset)].goal=Number(goalInput.value||0);
-save(d);
-clear("goalInput");
-render();
-}
-
-function advice(i,b,l){
-if(i===0)return"Add your income first.";
-if(l<0)return"Overspending. Cut bills.";
-if(l<i*0.1)return"Very low buffer this month.";
-if(l>i*0.4)return"Strong savings rate.";
-return"Budget stable.";
+function advice(i,l){
+if(i===0)return"Income not detected. Awaiting input.";
+if(l<0)return"Warning: expenditure exceeds safe threshold.";
+if(l<i*0.1)return"Buffer critically low. Adjust behaviour.";
+if(l>i*0.4)return"Surplus strong. Financial trajectory optimal.";
+return"System stable. Continue current pattern.";
 }
 
 function render(){
@@ -70,19 +62,19 @@ d.bills.forEach((b,i)=>{
 total+=b.amount;
 const li=document.createElement("li");
 li.innerHTML=`${b.name} £${b.amount}
-<button onclick="dlt(${i})">🗑</button>`;
+<button onclick="dlt(${i})">✕</button>`;
 billList.appendChild(li);
 });
 
-const left=d.income-total;
+const left=Math.max(0,d.income-total);
 
 income.innerText=`£${d.income}`;
 bills.innerText=`£${total}`;
 left.innerText=`£${left}`;
 
-leftBar.style.width=(d.income?Math.max(0,(left/d.income)*100):0)+"%";
+leftBar.style.width=d.income?((left/d.income)*100)+"%":"0%";
 
-aiAdvice.innerText=advice(d.income,total,left);
+aiAdvice.innerText=advice(d.income,left);
 }
 
 function dlt(i){
@@ -95,38 +87,30 @@ render();
 function prevMonth(){offset--;render();}
 function nextMonth(){offset++;render();}
 
-function toggleDark(){
-document.body.classList.toggle("dark");
-localStorage.setItem("dark",document.body.classList.contains("dark"));
-}
-
-if(localStorage.getItem("dark")==="true")toggleDark();
-
 render();
 
 function renderYear(){
 const data=load();
-let html="",yearTotal=0,yearIncome=0;
+let html="",ti=0,tb=0;
 
-for(const m in data){
-let bills=0;
-data[m].bills.forEach(b=>bills+=b.amount);
-
-yearIncome+=data[m].income;
-yearTotal+=bills;
+for(const k in data){
+let b=0;
+data[k].bills.forEach(x=>b+=x.amount);
+ti+=data[k].income;
+tb+=b;
 
 html+=`<div class="card">
-<h3>${m}</h3>
-Income £${data[m].income}<br>
-Bills £${bills}<br>
-Left £${data[m].income-bills}
+<h3>${k}</h3>
+Income £${data[k].income}<br>
+Bills £${b}<br>
+Left £${data[k].income-b}
 </div>`;
 }
 
-html+=`<div class="card highlight">
-Year Income £${yearIncome}<br>
-Year Bills £${yearTotal}<br>
-Saved £${yearIncome-yearTotal}
+html+=`<div class="card accent">
+Year Income £${ti}<br>
+Year Bills £${tb}<br>
+Saved £${ti-tb}
 </div>`;
 
 document.getElementById("yearStats").innerHTML=html;

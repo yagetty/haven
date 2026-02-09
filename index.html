@@ -2,20 +2,20 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Budget Dashboard</title>
+<title>Budget AI</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
 <header>
-  <h2 id="monthLabel"></h2>
-  <div>
-    <button onclick="prevMonth()">◀</button>
-    <button onclick="nextMonth()">▶</button>
-    <a href="year.html">Year</a>
-    <button onclick="toggleDark()">🌙</button>
-  </div>
+<h2 id="monthLabel"></h2>
+<div>
+<button onclick="prevMonth()">◀</button>
+<button onclick="nextMonth()">▶</button>
+<a href="year.html">Year</a>
+<button onclick="toggleDark()">◐</button>
+</div>
 </header>
 
 <section class="cards">
@@ -30,7 +30,7 @@
 <p id="bills">£0</p>
 </div>
 
-<div class="card highlight">
+<div class="card accent">
 <h3>Money Left</h3>
 <p id="left">£0</p>
 <div class="bar"><div id="leftBar"></div></div>
@@ -38,7 +38,7 @@
 
 </section>
 
-<section class="inputArea">
+<section class="inputs">
 
 <input id="incomeInput" placeholder="Income">
 <button onclick="saveIncome()">Save Income</button>
@@ -48,14 +48,11 @@
 <label><input type="checkbox" id="recurring"> Recurring</label>
 <button onclick="addBill()">Add Bill</button>
 
-<input id="goalInput" placeholder="Savings goal">
-<button onclick="setGoal()">Set Goal</button>
-
 </section>
 
 <ul id="billList"></ul>
 
-<div id="aiAdvice" class="advice"></div>
+<div id="aiAdvice" class="ai"></div>
 
 <script src="app.js"></script>
 </body>

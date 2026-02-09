@@ -1,18 +1,16 @@
 body{
 font-family:-apple-system,sans-serif;
-background:#f5f5f7;
 margin:0;
-padding:16px;
-transition:0.3s;
+padding:18px;
+background:#07080d;
+color:#e8e9ff;
 }
-
-body.dark{background:#111;color:white;}
 
 header{
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin-bottom:12px;
+margin-bottom:14px;
 }
 
 .cards{
@@ -25,50 +23,57 @@ gap:12px;
 }
 
 .card{
-background:white;
+background:rgba(20,22,35,0.6);
+border:1px solid rgba(0,255,255,0.08);
 padding:18px;
-border-radius:16px;
-box-shadow:0 6px 18px rgba(0,0,0,0.06);
-animation:fade 0.4s ease;
+border-radius:18px;
+backdrop-filter:blur(12px);
+box-shadow:0 0 20px rgba(0,255,255,0.05);
 }
 
-body.dark .card{background:#1c1c1e;}
+.accent{
+border-color:#00e5ff;
+box-shadow:0 0 20px rgba(0,229,255,0.3);
+}
 
-.highlight{background:#0071e3;color:white;}
+.card h3{opacity:.6;margin:0;}
+.card p{font-size:28px;margin:8px 0;}
 
 .bar{
-height:10px;
-background:#ddd;
+height:8px;
+background:#111;
 border-radius:8px;
 overflow:hidden;
 }
 
 .bar div{
 height:100%;
-background:#34c759;
+background:linear-gradient(90deg,#00e5ff,#7afcff);
 width:0%;
-transition:0.5s;
+transition:0.6s;
 }
 
-input,button{
+.inputs input, button{
 width:100%;
 padding:12px;
-border-radius:12px;
-border:1px solid #ddd;
 margin:6px 0;
+border-radius:12px;
+border:1px solid rgba(0,255,255,0.15);
+background:#0f1120;
+color:white;
 font-size:16px;
 }
 
 button{
-background:#0071e3;
-color:white;
-border:none;
+background:#00e5ff;
+color:black;
+font-weight:600;
 }
 
 ul{list-style:none;padding:0;}
 
 li{
-background:white;
+background:#111426;
 padding:12px;
 border-radius:12px;
 margin:6px 0;
@@ -76,17 +81,11 @@ display:flex;
 justify-content:space-between;
 }
 
-body.dark li{background:#1c1c1e;}
-
-.advice{
+.ai{
 margin-top:14px;
-padding:14px;
-border-radius:12px;
-background:#222;
+padding:16px;
+border-radius:14px;
+background:linear-gradient(135deg,#001aff,#00e5ff);
 color:white;
-}
-
-@keyframes fade{
-from{opacity:0;transform:translateY(6px);}
-to{opacity:1;transform:translateY(0);}
+font-weight:500;
 }
