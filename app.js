@@ -1,120 +1,133 @@
-let offset = 0;
+let offset=0;
 
 function m(o=0){
-  const d=new Date();
-  d.setMonth(d.getMonth()+o);
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+const d=new Date();
+d.setMonth(d.getMonth()+o);
+return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 }
 
 function load(){return JSON.parse(localStorage.getItem("budget")||"{}");}
 function save(d){localStorage.setItem("budget",JSON.stringify(d));}
 
 function init(){
-  const d=load(),mo=m(offset);
-  if(!d[mo]){
-    const prev=m(offset-1);
-    const rec=d[prev]?.bills?.filter(b=>b.recurring)||[];
-    d[mo]={income:0,bills:[...rec],goal:0};
-    save(d);
-  }
+const d=load(),mo=m(offset);
+if(!d[mo]){
+const prev=m(offset-1);
+const rec=d[prev]?.bills?.filter(b=>b.recurring)||[];
+d[mo]={income:0,bills:[...rec],goal:0};
+save(d);
+}
 }
 
-function clearInputs(...ids){
-  ids.forEach(id=>document.getElementById(id).value="");
-}
+function clear(id){document.getElementById(id).value="";}
 
 function saveIncome(){
-  const d=load();
-  d[m(offset)].income=Number(incomeInput.value||0);
-  save(d);
-  clearInputs("incomeInput");
-  render();
+const d=load();
+d[m(offset)].income=Number(incomeInput.value||0);
+save(d);
+clear("incomeInput");
+render();
 }
 
 function addBill(){
-  const d=load();
-  d[m(offset)].bills.push({
-    name:billName.value,
-    amount:Number(billAmount.value||0),
-    recurring:recurring.checked
-  });
-  save(d);
-  clearInputs("billName","billAmount");
-  render();
+const d=load();
+d[m(offset)].bills.push({
+name:billName.value,
+amount:Number(billAmount.value||0),
+recurring:recurring.checked
+});
+save(d);
+clear("billName");
+clear("billAmount");
+render();
 }
 
 function setGoal(){
-  const d=load();
-  d[m(offset)].goal=Number(goalInput.value||0);
-  save(d);
-  clearInputs("goalInput");
-  render();
+const d=load();
+d[m(offset)].goal=Number(goalInput.value||0);
+save(d);
+clear("goalInput");
+render();
 }
 
-function deleteBill(i){
-  const d=load();
-  d[m(offset)].bills.splice(i,1);
-  save(d);
-  render();
-}
-
-function editBill(i){
-  const d=load(),b=d[m(offset)].bills[i];
-  b.name=prompt("Bill",b.name)||b.name;
-  b.amount=Number(prompt("Amount",b.amount)||b.amount);
-  save(d);
-  render();
-}
-
-function advice(income,bills,left,goal){
-  if(income===0)return"Start by adding your monthly income.";
-  if(left<0)return"You are overspending. Reduce bills immediately.";
-  if(goal>0&&left>0)return`At this rate you'll hit your goal in ${Math.ceil(goal/left)} months.`;
-  if(left>income*0.4)return"Excellent savings rate. You're financially strong.";
-  if(left<income*0.1)return"Warning: very little buffer left this month.";
-  return"Your budget is balanced. Maintain discipline.";
+function advice(i,b,l){
+if(i===0)return"Add your income first.";
+if(l<0)return"Overspending. Cut bills.";
+if(l<i*0.1)return"Very low buffer this month.";
+if(l>i*0.4)return"Strong savings rate.";
+return"Budget stable.";
 }
 
 function render(){
-  init();
-  const d=load()[m(offset)];
-  monthLabel.innerText=m(offset);
+init();
+const d=load()[m(offset)];
+monthLabel.innerText=m(offset);
 
-  let total=0;
-  billList.innerHTML="";
-  d.bills.forEach((b,i)=>{
-    total+=b.amount;
-    const li=document.createElement("li");
-    li.innerHTML=`${b.name} £${b.amount}
-      <span>
-        <button onclick="editBill(${i})">✏</button>
-        <button onclick="deleteBill(${i})">🗑</button>
-      </span>`;
-    billList.appendChild(li);
-  });
+let total=0;
+billList.innerHTML="";
 
-  const left=d.income-total;
+d.bills.forEach((b,i)=>{
+total+=b.amount;
+const li=document.createElement("li");
+li.innerHTML=`${b.name} £${b.amount}
+<button onclick="dlt(${i})">🗑</button>`;
+billList.appendChild(li);
+});
 
-  income.innerText=`£${d.income}`;
-  bills.innerText=`£${total}`;
-  left.innerText=`£${left}`;
+const left=d.income-total;
 
-  leftBar.style.width=Math.max(0,(left/d.income)*100||0)+"%";
+income.innerText=`£${d.income}`;
+bills.innerText=`£${total}`;
+left.innerText=`£${left}`;
 
-  savingsText.innerText=`£${left} / £${d.goal}`;
-  savingsBar.style.width=d.goal?Math.min(100,(left/d.goal)*100)+"%":"0%";
+leftBar.style.width=(d.income?Math.max(0,(left/d.income)*100):0)+"%";
 
-  aiAdvice.innerText=advice(d.income,total,left,d.goal);
+aiAdvice.innerText=advice(d.income,total,left);
+}
+
+function dlt(i){
+const d=load();
+d[m(offset)].bills.splice(i,1);
+save(d);
+render();
 }
 
 function prevMonth(){offset--;render();}
 function nextMonth(){offset++;render();}
 
 function toggleDark(){
-  document.body.classList.toggle("dark");
-  localStorage.setItem("dark",document.body.classList.contains("dark"));
+document.body.classList.toggle("dark");
+localStorage.setItem("dark",document.body.classList.contains("dark"));
 }
 
 if(localStorage.getItem("dark")==="true")toggleDark();
 
 render();
+
+function renderYear(){
+const data=load();
+let html="",yearTotal=0,yearIncome=0;
+
+for(const m in data){
+let bills=0;
+data[m].bills.forEach(b=>bills+=b.amount);
+
+yearIncome+=data[m].income;
+yearTotal+=bills;
+
+html+=`<div class="card">
+<h3>${m}</h3>
+Income £${data[m].income}<br>
+Bills £${bills}<br>
+Left £${data[m].income-bills}
+</div>`;
+}
+
+html+=`<div class="card highlight">
+Year Income £${yearIncome}<br>
+Year Bills £${yearTotal}<br>
+Saved £${yearIncome-yearTotal}
+</div>`;
+
+document.getElementById("yearStats").innerHTML=html;
+}
