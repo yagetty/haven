@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Budget App</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="manifest" href="manifest.json">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Budget</title>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -21,36 +21,34 @@
     <h3>Income</h3>
     <p id="income">£0</p>
   </div>
+
   <div class="card">
     <h3>Bills</h3>
     <p id="bills">£0</p>
   </div>
+
   <div class="card highlight">
     <h3>Money Left</h3>
     <p id="left">£0</p>
   </div>
 </div>
 
-<input id="incomeInput" placeholder="Income">
-<button onclick="saveIncome()">Save Income</button>
+<div class="section">
+  <input id="incomeInput" placeholder="Income">
+  <button onclick="saveIncome()">Save Income</button>
+</div>
 
-<h3>Add Bill</h3>
-<input id="billName" placeholder="Bill">
-<input id="billAmount" placeholder="Amount">
-<label><input type="checkbox" id="recurring"> Recurring</label>
-<button onclick="addBill()">Add</button>
+<div class="section">
+  <input id="billName" placeholder="Bill name">
+  <input id="billAmount" placeholder="Amount">
+  <label>
+    <input type="checkbox" id="recurring"> Recurring
+  </label>
+  <button onclick="addBill()">Add Bill</button>
+</div>
 
 <ul id="billList"></ul>
 
-<canvas id="chart"></canvas>
-
 <script src="app.js"></script>
-
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js');
-}
-</script>
-
 </body>
 </html>

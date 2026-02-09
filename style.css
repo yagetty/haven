@@ -1,8 +1,8 @@
 body {
-  font-family: -apple-system, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   background: #f5f5f7;
   margin: 0;
-  padding: 20px;
+  padding: 16px;
   transition: 0.3s;
 }
 
@@ -18,16 +18,23 @@ body.dark {
 }
 
 .dashboard {
-  display: flex;
-  gap: 10px;
-  margin: 20px 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+@media(min-width:600px){
+  .dashboard {
+    grid-template-columns: repeat(3,1fr);
+  }
 }
 
 .card {
   background: white;
-  padding: 20px;
-  border-radius: 16px;
-  flex: 1;
+  padding: 18px;
+  border-radius: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 body.dark .card {
@@ -39,17 +46,23 @@ body.dark .card {
   color: white;
 }
 
+.section {
+  margin: 12px 0;
+}
+
 input, button {
-  padding: 10px;
-  border-radius: 12px;
-  border: none;
-  margin: 5px 0;
   width: 100%;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid #ddd;
+  margin: 6px 0;
+  font-size: 16px;
 }
 
 button {
   background: #0071e3;
   color: white;
+  border: none;
 }
 
 ul {
@@ -58,7 +71,14 @@ ul {
 }
 
 li {
+  background: white;
+  padding: 12px;
+  border-radius: 14px;
+  margin: 6px 0;
   display: flex;
   justify-content: space-between;
-  padding: 8px;
+}
+
+body.dark li {
+  background: #2c2c2e;
 }
